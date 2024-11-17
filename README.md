@@ -51,4 +51,4 @@ implementation("org.ramani-maps:ramani-maplibre:0.7.0")
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
-📖 For more detailed information, check out the full article on Medium: [Creating Delightful Offline Maps with MapLibre and Ramani Maps in Jetpack Compose]([https://medium.com/@yourusername/creating-delightful-offline-maps-with-maplibre-and-ramani-maps-in-jetpack-compose](https://medium.com/@TonyGnk/creating-delightful-offline-maps-with-maplibre-and-ramani-maps-in-jetpack-compose-28d6781409f1))
+📖 For more detailed information, check out the full article on Medium: [Creating Delightful Offline Maps with MapLibre and Ramani Maps in Jetpack Compose](https://medium.com/@TonyGnk/creating-delightful-offline-maps-with-maplibre-and-ramani-maps-in-jetpack-compose-28d6781409f1)
