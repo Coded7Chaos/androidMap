@@ -57,7 +57,7 @@ class MapStyleManager(private val context: Context) {
 
     companion object {
         private const val STYLE_FILENAME = "style.json"
-        private const val MBTILES_FILENAME = "malta_europe.mbtiles"
+        private const val MBTILES_FILENAME = "bolivia_la-paz.mbtiles"
         private const val FILE_URI_PLACEHOLDER = "___FILE_URI___"
     }
 }
