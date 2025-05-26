@@ -52,6 +52,7 @@ fun RutasPumaListScreen(
     navigateToProfile: () -> Unit,
     navigateToRutasPuma: () -> Unit,
     navigateToMap: () -> Unit,
+    navigateToRuta: (Int, String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: RutasPumaListViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ){
@@ -73,6 +74,7 @@ fun RutasPumaListScreen(
     ) { innerPadding ->
         RutasPumaListBody(
             rutasPumaList = rutaUiState.rutasList,
+            onRutaClick = navigateToRuta,
             modifier = modifier.fillMaxSize(),
             contentPadding = innerPadding,
         )
@@ -82,6 +84,7 @@ fun RutasPumaListScreen(
 @Composable
 fun RutasPumaListBody(
     rutasPumaList: List<Ruta>,
+    onRutaClick: (Int, String) -> Unit,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(0.dp)
 ){
@@ -91,7 +94,7 @@ fun RutasPumaListBody(
     ) {
         if(rutasPumaList.isEmpty()){
             Text(
-                text = stringResource(R.string.no_item_description),
+                text = stringResource(R.string.no_routes_description),
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.padding(contentPadding),
@@ -99,7 +102,7 @@ fun RutasPumaListBody(
         } else {
             RutasList(
                 rutasList = rutasPumaList,
-                onRutaClick = { it.id_ruta_puma },
+                onRutaClick = onRutaClick,
                 contentPadding = contentPadding,
                 modifier = Modifier.padding(horizontal = dimensionResource(id = R.dimen.padding_small))
             )
@@ -110,7 +113,7 @@ fun RutasPumaListBody(
 @Composable
 fun RutasList(
     rutasList: List<Ruta>,
-    onRutaClick: (Ruta) -> Unit,
+    onRutaClick: (Int, String) -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier
 ){
@@ -122,7 +125,7 @@ fun RutasList(
             RutaItem(
                 ruta = ruta,
                 modifier = Modifier.padding(dimensionResource(id = R.dimen.padding_small))
-                    .clickable{ onRutaClick(ruta) }
+                    .clickable{ onRutaClick(ruta.id_ruta_puma, ruta.nombre) }
             )
         }
     }

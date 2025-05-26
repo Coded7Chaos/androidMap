@@ -17,5 +17,7 @@
     <string name="perfil_title">perfil de usuario</string>
     <string name="rutas_puma_title">Rutas del pumakatari</string>
     <string name="fav_title">Rutas guardadas en favoritos</string>
+    <string name="no_routes_description">No existen rutas disponibles</string>
+    <string name="ruta_puma_title">Vista de ruta</string>
 
 </resources>

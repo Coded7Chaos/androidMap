@@ -5,7 +5,9 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import com.tonygnk.maplibredemo.ui.favoritos.FavoritosDestination
 import com.tonygnk.maplibredemo.ui.favoritos.FavoritosScreen
 import com.tonygnk.maplibredemo.ui.home.HomeDestination
@@ -16,6 +18,9 @@ import com.tonygnk.maplibredemo.ui.parada.ParadaEntryDestination
 import com.tonygnk.maplibredemo.ui.parada.ParadaEntryScreen
 import com.tonygnk.maplibredemo.ui.perfil.PerfilScreen
 import com.tonygnk.maplibredemo.ui.perfil.ProfileDestination
+import com.tonygnk.maplibredemo.ui.rutasPuma.RutaPumaDestination
+import com.tonygnk.maplibredemo.ui.rutasPuma.RutaPumaDestination.rutaNombre
+import com.tonygnk.maplibredemo.ui.rutasPuma.RutaPumaScreen
 import com.tonygnk.maplibredemo.ui.rutasPuma.RutasPumaDestination
 import com.tonygnk.maplibredemo.ui.rutasPuma.RutasPumaListScreen
 import com.tonygnk.maplibredemo.ui.usuario.UserDestination
@@ -76,7 +81,10 @@ fun MapNavHost(
                 navigateToRutasPuma = { navController.navigate(RutasPumaDestination.route) },
                 navigateToProfile = { navController.navigate(ProfileDestination.route) },
                 navigateToFavoritos = { navController.navigate(FavoritosDestination.route) },
-                navigateToMap = { navController.navigate(MapDestination.route) }
+                navigateToMap = { navController.navigate(MapDestination.route) },
+                navigateToRuta = { rutaIdArg, rutaNombre ->
+                    navController.navigate("${RutaPumaDestination.route}/$rutaIdArg/$rutaNombre")
+                }
             )
         }
         composable(route = ProfileDestination.route) {
@@ -86,6 +94,19 @@ fun MapNavHost(
                 navigateToFavoritos = { navController.navigate(FavoritosDestination.route) },
                 navigateToMap = { navController.navigate(MapDestination.route) }
             )
+        }
+
+        composable(route = RutaPumaDestination.routeWithArgs,
+                   arguments = listOf(
+                       navArgument(RutaPumaDestination.rutaIdArg) { type = NavType.IntType },
+                       navArgument(RutaPumaDestination.rutaNombre) { type = NavType.StringType }
+                   )
+            ) {backStackEntry ->
+                val rutaNombre = backStackEntry.arguments?.getString("rutaNombre")
+                RutaPumaScreen(
+                    titulo = rutaNombre ?: "Detalle de ruta",
+                    navigateBack = { navController.navigateUp() }
+                )
         }
 
     }
