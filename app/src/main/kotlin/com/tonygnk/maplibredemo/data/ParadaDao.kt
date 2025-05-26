@@ -24,5 +24,4 @@ interface ParadaDao {
 
     @Query("SELECT * FROM paradas ORDER BY nombre ASC")
     fun getAllItems(): Flow<List<Parada>>
-
 }

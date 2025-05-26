@@ -3,4 +3,19 @@
     <string name="parada_entry_title">Add Item</string>
     <string name="show_less">show less</string>
     <string name="show_more">show more</string>
+    <string name="back_button">go back</string>
+    <string name="no_item_description">No existen paradas disponibles</string>
+    <string name="in_stock">in stock</string>
+    <string name="save_action">Guardar</string>
+    <string name="parada_name_req">Nombre de la parada</string>
+    <string name="parada_dir_req">Direccion de la parada</string>
+    <string name="parada_lon_req">se requiere la longitud para la parada</string>
+    <string name="required_fields">informacion requerida\n</string>
+    <string name="parada_lat_req">Se requiere la latitud de la parada</string>
+    <string name="users_list_title">Lista de usuarios</string>
+    <string name="map_title">Busqueda de ruta</string>
+    <string name="perfil_title">perfil de usuario</string>
+    <string name="rutas_puma_title">Rutas del pumakatari</string>
+    <string name="fav_title">Rutas guardadas en favoritos</string>
+
 </resources>

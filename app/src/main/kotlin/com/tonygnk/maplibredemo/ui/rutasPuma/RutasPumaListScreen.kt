@@ -1,4 +1,5 @@
-package com.tonygnk.maplibredemo.ui.home
+package com.tonygnk.maplibredemo.ui.rutasPuma
+
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -10,107 +11,85 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Card
-import androidx.compose.material3.Icon
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.tonygnk.maplibredemo.BottomNavBar
 import com.tonygnk.maplibredemo.MapTopAppBar
 import com.tonygnk.maplibredemo.R
-import com.tonygnk.maplibredemo.models.Parada
-import com.tonygnk.maplibredemo.ui.AppViewModelProvider
-import com.tonygnk.maplibredemo.ui.navigation.NavigationDestination
-import com.tonygnk.maplibredemo.ui.theme.MapTheme
-import androidx.compose.runtime.getValue
+import com.tonygnk.maplibredemo.models.Ruta
 import com.tonygnk.maplibredemo.models.User
+import com.tonygnk.maplibredemo.ui.AppViewModelProvider
+import com.tonygnk.maplibredemo.ui.home.HomeDestination
+import com.tonygnk.maplibredemo.ui.navigation.NavigationDestination
+import com.tonygnk.maplibredemo.ui.usuario.UserViewModel
 
-object HomeDestination : NavigationDestination {
-    override val route = "home"
-    override val titleRes = R.string.app_name
+object RutasPumaDestination : NavigationDestination {
+    override val route = "rutas_puma"
+    override val titleRes = R.string.rutas_puma_title
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(
-    navigateToParadaEntry: () -> Unit,
-    navigateToUserScreen: () -> Unit,
+fun RutasPumaListScreen(
+    navigateToFavoritos: () -> Unit,
+    navigateToProfile: () -> Unit,
+    navigateToRutasPuma: () -> Unit,
+    navigateToMap: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: HomeViewModel = viewModel(factory = AppViewModelProvider.Factory)
+    viewModel: RutasPumaListViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ){
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
-    val homeUiState by viewModel.homeUiState.collectAsState()
 
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+    val rutaUiState by viewModel.rutaUiState.collectAsState()
 
     Scaffold(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-        topBar = {
-            MapTopAppBar(
-                title = stringResource(HomeDestination.titleRes),
-                canNavigateBack = false,
-                scrollBehavior = scrollBehavior
+        bottomBar = {
+            BottomNavBar(
+                navigateToFavoritos = navigateToFavoritos,
+                navigateToProfile= navigateToProfile,
+                navigateToRutasPuma= navigateToRutasPuma,
+                navigateToMap = navigateToMap,
+                selectedItem = "rutas"
             )
-            FloatingActionButton(
-                onClick = navigateToUserScreen,
-                shape = MaterialTheme.shapes.medium,
-                modifier = Modifier.padding(dimensionResource(id = R.dimen.padding_small))
-            ) {
-                Text("Pagina de usuarios")
-            }
-
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = navigateToParadaEntry,
-                shape = MaterialTheme.shapes.medium,
-                modifier = Modifier.padding(dimensionResource(id = R.dimen.padding_large))
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = stringResource(R.string.parada_entry_title)
-                )
-            }
-        },
-
+        }
     ) { innerPadding ->
-        HomeBody(
-            paradaList = homeUiState.paradaList,
-            onItemClick = navigateToParadaEntry,
+        RutasPumaListBody(
+            rutasPumaList = rutaUiState.rutasList,
             modifier = modifier.fillMaxSize(),
             contentPadding = innerPadding,
         )
     }
 }
 
-
 @Composable
-fun HomeBody(
-    paradaList: List<Parada>,
-    onItemClick: () -> Unit,
+fun RutasPumaListBody(
+    rutasPumaList: List<Ruta>,
     modifier: Modifier = Modifier,
-    contentPadding: PaddingValues = PaddingValues(0.dp),
+    contentPadding: PaddingValues = PaddingValues(0.dp)
 ){
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier,
     ) {
-        if(paradaList.isEmpty()){
+        if(rutasPumaList.isEmpty()){
             Text(
                 text = stringResource(R.string.no_item_description),
                 textAlign = TextAlign.Center,
@@ -118,9 +97,9 @@ fun HomeBody(
                 modifier = Modifier.padding(contentPadding),
             )
         } else {
-            MapList(
-                paradaList = paradaList,
-                onParadaClick = { it.id_parada },
+            RutasList(
+                rutasList = rutasPumaList,
+                onRutaClick = { it.id_ruta_puma },
                 contentPadding = contentPadding,
                 modifier = Modifier.padding(horizontal = dimensionResource(id = R.dimen.padding_small))
             )
@@ -129,30 +108,31 @@ fun HomeBody(
 }
 
 @Composable
-private fun MapList(
-    paradaList: List<Parada>,
-    onParadaClick: (Parada) -> Unit,
+fun RutasList(
+    rutasList: List<Ruta>,
+    onRutaClick: (Ruta) -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier
-) {
+){
     LazyColumn(
         modifier = modifier,
         contentPadding = contentPadding
     ) {
-        items (items = paradaList, key = { it.id_parada }) { parada ->
-            MapParada(
-                parada = parada,
+        items (items = rutasList, key = { it.id_ruta_puma }) { ruta ->
+            RutaItem(
+                ruta = ruta,
                 modifier = Modifier.padding(dimensionResource(id = R.dimen.padding_small))
-                    .clickable{ onParadaClick(parada) }
+                    .clickable{ onRutaClick(ruta) }
             )
         }
     }
-
 }
 
+
 @Composable
-private fun MapParada(
-    parada: Parada, modifier: Modifier = Modifier
+private fun RutaItem(
+    ruta: Ruta,
+    modifier: Modifier = Modifier
 ){
     Card(
         modifier = modifier,
@@ -166,19 +146,10 @@ private fun MapParada(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = parada.nombre,
+                    text = ruta.nombre,
                     style = MaterialTheme.typography.titleLarge,
                 )
-                Spacer(Modifier.weight(1f))
-                Text(
-                    text = parada.lon.toString(),
-                    style = MaterialTheme.typography.titleMedium
-                )
             }
-            Text(
-                text = stringResource(R.string.in_stock, parada.id_parada),
-                style = MaterialTheme.typography.titleMedium
-            )
         }
     }
 }

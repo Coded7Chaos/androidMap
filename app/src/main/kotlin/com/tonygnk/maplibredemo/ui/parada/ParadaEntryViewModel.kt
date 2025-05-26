@@ -1,11 +1,16 @@
 package com.tonygnk.maplibredemo.ui.parada
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.tonygnk.maplibredemo.data.TransporteDatabase
 import com.tonygnk.maplibredemo.models.Parada
 import com.tonygnk.maplibredemo.repository.ParadaRepository
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 class ParadaEntryViewModel(private val paradaRepository: ParadaRepository) : ViewModel(){
     var paradaUiState by mutableStateOf(ParadaUiState())
@@ -22,10 +27,15 @@ class ParadaEntryViewModel(private val paradaRepository: ParadaRepository) : Vie
     }
 
     suspend fun guardarParada(){
-        if(validarEntrada()){
-            paradaRepository.insertParada(paradaUiState.paradaDatos.toParada())
+            try {
+                if(validarEntrada()){
+                    paradaRepository.insertParada(paradaUiState.paradaDatos.toParada())
+                    Log.d("SAVE_PARADA","Guardado exitoso")
+                }
+            } catch (e: Exception){
+                Log.e("SAVE_ERROR", "Error al guardar", e)
+            }
         }
-    }
 }
 
 data class ParadaUiState(
@@ -40,6 +50,7 @@ data class ParadaDatos(
     val nombre: String = "",
     val direccion: String = "",
     )
+
 fun ParadaDatos.toParada(): Parada = Parada(
     id_parada = id_parada,
     lat = latitud.toDoubleOrNull() ?: 0.0,
