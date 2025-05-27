@@ -25,6 +25,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -38,9 +39,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.tonygnk.maplibredemo.R.string
 import androidx.navigation.NavHostController
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import com.tonygnk.maplibredemo.models.Coordenada
 import com.tonygnk.maplibredemo.ui.navigation.MapNavHost
 import org.maplibre.android.geometry.LatLng
@@ -136,27 +141,41 @@ fun MyMap(
     puntosList: List<Coordenada>
 ) {
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
 
-    // Permisos de ubicación
-    var hasLocationPermission by rememberSaveable { mutableStateOf(false) }
+    // Estado de permiso (no Saveable para re-pedir cada inicio)
+    var hasLocationPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        )
+    }
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { results ->
-        hasLocationPermission =
-            results[Manifest.permission.ACCESS_FINE_LOCATION] == true &&
-                    results[Manifest.permission.ACCESS_COARSE_LOCATION] == true
-    }
-    LaunchedEffect(Unit) {
-        permissionLauncher.launch(
-            arrayOf(
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            )
-        )
+        hasLocationPermission = results[Manifest.permission.ACCESS_FINE_LOCATION] == true
     }
 
-    // Estado de cámara
-    val cameraPositionState: MutableState<CameraPosition> = remember {
+    // Observa ciclo de vida para re-pedir permiso en ON_START
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_START && !hasLocationPermission) {
+                permissionLauncher.launch(
+                    arrayOf(
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                    )
+                )
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    // Estado de cámara como MutableState para detectar cambios
+    val cameraPositionState = remember {
         mutableStateOf(
             CameraPosition(
                 target = LatLng(-16.5, -68.15),
@@ -165,55 +184,52 @@ fun MyMap(
         )
     }
 
-    // Obtiene última ubicación cuando permisos concedidos
+    // Obtiene ubicación precisa tras permiso y actualiza estado
     LaunchedEffect(hasLocationPermission) {
-        if (hasLocationPermission &&
-            ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
+        if (hasLocationPermission) {
             val fusedClient = LocationServices.getFusedLocationProviderClient(context)
-            fusedClient.lastLocation.addOnSuccessListener { loc ->
-                loc?.let {
-                    val userLatLng = LatLng(it.latitude, it.longitude)
-                    cameraPositionState.value = CameraPosition(userLatLng, zoom = 18.0)
+            fusedClient.getCurrentLocation(
+                Priority.PRIORITY_HIGH_ACCURACY,
+                null
+            ).addOnSuccessListener { location ->
+                location?.let {
+                    // Actualiza entire CameraPosition para re-componer
+                    cameraPositionState.value = CameraPosition(
+                        target = LatLng(it.latitude, it.longitude),
+                        zoom = 18.0
+                    )
                 }
             }
         }
     }
 
-    // Construcción del estilo
+    // Estilo de mapa
     val styleBuilder = remember {
         val styleFile = MapStyleManager(context)
-            .setupStyle()
-            .let { result ->
+            .setupStyle().let { result ->
                 when (result) {
                     is MapStyleManager.StyleSetupResult.Success -> result.styleFile
-                    is MapStyleManager.StyleSetupResult.Error   -> throw result.exception
+                    is MapStyleManager.StyleSetupResult.Error -> throw result.exception
                 }
             }
         Style.Builder().fromUri(Uri.fromFile(styleFile).toString())
     }
 
-    // Conversión de coordenadas a LatLng
-    fun List<Coordenada>.toLatLngList() = this.map { LatLng(it.lat, it.lon) }
-    val puntos = puntosList.toLatLngList()
+    // Convertir ruta a puntos
+    val puntos = puntosList.map { LatLng(it.lat, it.lon) }
 
-    // Presentación del mapa
+    // Mostrar mapa
     Box(modifier = modifier.fillMaxSize()) {
         MapLibre(
             modifier = Modifier.fillMaxSize(),
             styleBuilder = styleBuilder,
             cameraPosition = cameraPositionState.value
         ) {
-            // Polilínea de ruta
             Polyline(puntos, color = "Red", lineWidth = 5.0f)
-            // Indicador de ubicación actual
-            val userTarget = cameraPositionState.value.target
-            if (hasLocationPermission && userTarget != null) {
+            val cameraPositionState = cameraPositionState.value.target
+            if (hasLocationPermission && cameraPositionState != null) {
                 Circle(
-                    center = userTarget,
+                    center = cameraPositionState,
                     radius = 10f,
                     color = "Blue",
                     zIndex = 2
