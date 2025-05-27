@@ -29,6 +29,8 @@ class ParadasFunctions(
         val c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
         return R * c
     }
+
+
 }
 
 data class Paradas(val paradas: List<Parada> = listOf())
