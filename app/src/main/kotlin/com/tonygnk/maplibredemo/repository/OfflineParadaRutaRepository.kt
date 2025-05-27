@@ -1,7 +1,6 @@
 package com.tonygnk.maplibredemo.repository
 
 import com.tonygnk.maplibredemo.data.ParadaRutaDao
-import com.tonygnk.maplibredemo.models.User
 import kotlinx.coroutines.flow.Flow
 
 class OfflineParadaRutaRepository(private val paradaRutaDao: ParadaRutaDao): ParadaRutaRepository
