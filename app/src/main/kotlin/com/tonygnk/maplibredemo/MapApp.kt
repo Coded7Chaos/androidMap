@@ -223,7 +223,16 @@ fun MyMap(
         MapLibre(
             modifier = Modifier.fillMaxSize(),
             styleBuilder = styleBuilder,
-            cameraPosition = cameraPositionState.value
+            cameraPosition = cameraPositionState.value,
+            /*
+            onMapClick = { latLng ->
+                if (selectingPoint) {
+                    pickedLatLng = latLng
+                    cameraPosition = CameraPosition(latLng, 18.0)
+                    selectingPoint = false
+                }
+            }*/
+
         ) {
             Polyline(puntos, color = "Red", lineWidth = 5.0f)
             val cameraPositionState = cameraPositionState.value.target

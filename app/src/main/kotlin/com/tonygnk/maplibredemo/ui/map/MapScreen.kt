@@ -1,169 +1,219 @@
 package com.tonygnk.maplibredemo.ui.map
 
+import android.location.Geocoder
 import android.net.Uri
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.foundation.verticalScroll
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DirectionsBus
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SearchBar
-import androidx.compose.material3.SearchBarDefaults
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import com.tonygnk.maplibredemo.BottomNavBar
 import com.tonygnk.maplibredemo.MapStyleManager
+import com.tonygnk.maplibredemo.MyMap
 import com.tonygnk.maplibredemo.R
-import com.tonygnk.maplibredemo.ui.navigation.NavigationDestination
+import com.tonygnk.maplibredemo.models.Coordenada
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.maps.Style
 import org.ramani.compose.CameraPosition
+import org.ramani.compose.Circle
 import org.ramani.compose.MapLibre
 import org.ramani.compose.Polyline
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.semantics.isTraversalGroup
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.traversalIndex
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.tonygnk.maplibredemo.BottomNavBar
-import com.tonygnk.maplibredemo.MyMap
-import com.tonygnk.maplibredemo.ui.AppViewModelProvider
-import com.tonygnk.maplibredemo.ui.perfil.ProfileDestination
-import com.tonygnk.maplibredemo.ui.favoritos.FavoritosDestination
-import com.tonygnk.maplibredemo.ui.rutasPuma.RutasPumaDestination
-import com.tonygnk.maplibredemo.ui.usuario.UserDestination
-import kotlinx.coroutines.selects.select
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 
-object MapDestination : NavigationDestination {
-    override val route = "main_map"
-    override val titleRes = R.string.map_title
+@OptIn(ExperimentalMaterial3Api::class)
+object MapDestination {
+    const val route = "main_map"
+    val titleRes = R.string.map_title
 }
 
+@Composable
+fun MapBody(
+    contentPadding: PaddingValues = PaddingValues(0.dp)
+) {
+    MyMap(
+        modifier = Modifier.padding(contentPadding),
+        puntosList = listOf()
+    )
+}
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MapScreen(
     navigateToFavoritos: () -> Unit,
     navigateToProfile: () -> Unit,
     navigateToRutasPuma: () -> Unit,
     navigateToMap: () -> Unit,
-    modifier: Modifier = Modifier,
-    viewModel: MapViewModel = viewModel(factory = AppViewModelProvider.Factory)
+    modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val geocoder = remember { Geocoder(context) }
+
+    // Permisos de ubicación precisa
+    var hasLocationPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { results ->
+        hasLocationPermission = results[Manifest.permission.ACCESS_FINE_LOCATION] == true
+    }
+    // Solicitar permisos en ON_START
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_START && !hasLocationPermission) {
+                permissionLauncher.launch(
+                    arrayOf(
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                    )
+                )
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    // Estados para búsqueda y selección
+    var searchQuery by rememberSaveable { mutableStateOf("") }
+    var suggestions by remember { mutableStateOf(listOf<String>()) }
+    var selectingPoint by rememberSaveable { mutableStateOf(false) }
+    var pickedLatLng by remember { mutableStateOf<LatLng?>(null) }
+
+    // Cámara compartida
+    var cameraPosition by remember {
+        mutableStateOf(
+            CameraPosition(
+                target = LatLng(-16.5, -68.15),
+                zoom = 18.0
+            )
+        )
+    }
+    // Centrar en ubicación actual cuando permiso otorgado
+    LaunchedEffect(hasLocationPermission) {
+        if (hasLocationPermission) {
+            val fusedClient = LocationServices.getFusedLocationProviderClient(context)
+            fusedClient.getCurrentLocation(
+                Priority.PRIORITY_HIGH_ACCURACY,
+                null
+            ).addOnSuccessListener { location ->
+                location?.let {
+                    val userPos = LatLng(it.latitude, it.longitude)
+                    cameraPosition = CameraPosition(userPos, 18.0)
+                    pickedLatLng = userPos
+                }
+            }
+        }
+    }
+
+    // Estilo offline MBTiles
+    val styleBuilder = remember {
+        val styleFile = MapStyleManager(context)
+            .setupStyle().let { result ->
+                when (result) {
+                    is MapStyleManager.StyleSetupResult.Success -> result.styleFile
+                    is MapStyleManager.StyleSetupResult.Error -> throw result.exception
+                }
+            }
+        Style.Builder().fromUri(Uri.fromFile(styleFile).toString())
+    }
+
     Scaffold(
         bottomBar = {
             BottomNavBar(
                 navigateToFavoritos = navigateToFavoritos,
-                navigateToProfile= navigateToProfile,
-                navigateToRutasPuma= navigateToRutasPuma,
+                navigateToProfile = navigateToProfile,
+                navigateToRutasPuma = navigateToRutasPuma,
                 navigateToMap = navigateToMap,
                 selectedItem = "map"
             )
         },
         topBar = {
-           /*SimpleSearchBar(
-               textFieldState = rememberTextFieldState(),
-               onSearch = TODO(),
-               searchResults = TODO(),
-               modifier = TODO()
-           )*/
-        }
-    ) { innerPadding ->
-        MapBody(
-            contentPadding = innerPadding
-        )
-    }
-}
-
-@Composable
-fun MapBody(
-    contentPadding: PaddingValues = PaddingValues(0.dp)
-){
-    MyMap(modifier = Modifier.padding(contentPadding),
-        puntosList = listOf())
-}
-
-
-
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun SimpleSearchBar(
-    textFieldState: TextFieldState,
-    onSearch: (String) -> Unit,
-    searchResults: List<String>,
-    modifier: Modifier = Modifier
-) {
-    // Controls expansion state of the search bar
-    var expanded by rememberSaveable { mutableStateOf(false) }
-
-    Box(
-        modifier
-            .fillMaxSize()
-            .semantics { isTraversalGroup = true }
-    ) {
-        SearchBar(
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .semantics { traversalIndex = 0f },
-            inputField = {
-                SearchBarDefaults.InputField(
-                    query = textFieldState.text.toString(),
-                    onQueryChange = { textFieldState.edit { replace(0, length, it) } },
-                    onSearch = {
-                        onSearch(textFieldState.text.toString())
-                        expanded = false
-                    },
-                    expanded = expanded,
-                    onExpandedChange = { expanded = it },
-                    placeholder = { Text("Search") }
-                )
-            },
-            expanded = expanded,
-            onExpandedChange = { expanded = it },
-        ) {
-            // Display search results in a scrollable column
-            Column(Modifier.verticalScroll(rememberScrollState())) {
-                searchResults.forEach { result ->
-                    ListItem(
-                        headlineContent = { Text(result) },
-                        modifier = Modifier
-                            .clickable {
-                                textFieldState.edit { replace(0, length, result) }
-                                expanded = false
-                            }
-                            .fillMaxWidth()
+            // BARRA DE BÚSQUEDA + ICONO MARCADOR
+            Column {
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextField(
+                        value = searchQuery,
+                        onValueChange = { text ->
+                            searchQuery = text
+                            suggestions = if (text.length >= 3) {
+                                geocoder.getFromLocationName(text, 5)
+                                    ?.mapNotNull { it.getAddressLine(0) }
+                                    ?: emptyList()
+                            } else emptyList()
+                        },
+                        modifier = Modifier.weight(1f),
+                        placeholder = { Text("Search location") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                        keyboardActions = KeyboardActions(onSearch = {
+                            geocoder.getFromLocationName(searchQuery, 1)
+                                ?.firstOrNull()
+                                ?.let {
+                                    val target = LatLng(it.latitude, it.longitude)
+                                    cameraPosition = CameraPosition(target, 18.0)
+                                    pickedLatLng = target
+                                }
+                            suggestions = emptyList()
+                        })
                     )
+                    IconButton(onClick = { selectingPoint = !selectingPoint }) {
+                        Icon(Icons.Default.Place, contentDescription = "Pick point")
+                    }
+                }
+                // SUGERENCIAS desplegables
+                DropdownMenu(
+                    expanded = suggestions.isNotEmpty(),
+                    onDismissRequest = { suggestions = emptyList() }
+                ) {
+                    suggestions.forEach { address ->
+                        DropdownMenuItem(
+                            text = { Text(address) },
+                            onClick = {
+                                searchQuery = address
+                                suggestions = emptyList()
+                                geocoder.getFromLocationName(address, 1)
+                                    ?.firstOrNull()
+                                    ?.let {
+                                        val target = LatLng(it.latitude, it.longitude)
+                                        cameraPosition = CameraPosition(target, 18.0)
+                                        pickedLatLng = target
+                                    }
+                            }
+                        )
+                    }
                 }
             }
         }
+    ) { innerPadding ->
+        MapBody(contentPadding = innerPadding)
     }
 }
