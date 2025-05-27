@@ -1,8 +1,10 @@
 package com.tonygnk.maplibredemo.ui.map
 
 import android.location.Geocoder
+import android.net.ConnectivityManager
 import android.net.Uri
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -19,6 +21,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.core.content.ContextCompat
@@ -37,6 +41,8 @@ import org.ramani.compose.MapLibre
 import org.ramani.compose.Polyline
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 object MapDestination {
@@ -46,11 +52,11 @@ object MapDestination {
 
 @Composable
 fun MapBody(
-    contentPadding: PaddingValues = PaddingValues(0.dp)
+    contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     MyMap(
         modifier = Modifier.padding(contentPadding),
-        puntosList = listOf()
+        puntosList = listOf(),
     )
 }
 
@@ -67,6 +73,25 @@ fun MapScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
     val geocoder = remember { Geocoder(context) }
 
+    // Connectivity state
+    val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    var isOnline by remember { mutableStateOf(connectivityManager.activeNetwork != null) }
+    var lastConnectedTime by remember { mutableStateOf("") }
+    DisposableEffect(connectivityManager) {
+        val callback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: android.net.Network) {
+                isOnline = true
+                lastConnectedTime = LocalDateTime.now()
+                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+            }
+            override fun onLost(network: android.net.Network) {
+                isOnline = false
+            }
+        }
+        connectivityManager.registerDefaultNetworkCallback(callback)
+        onDispose { connectivityManager.unregisterNetworkCallback(callback) }
+    }
+
     // Permisos de ubicación precisa
     var hasLocationPermission by remember {
         mutableStateOf(
@@ -81,7 +106,6 @@ fun MapScreen(
     ) { results ->
         hasLocationPermission = results[Manifest.permission.ACCESS_FINE_LOCATION] == true
     }
-    // Solicitar permisos en ON_START
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_START && !hasLocationPermission) {
@@ -97,13 +121,12 @@ fun MapScreen(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    // Estados para búsqueda y selección
     var searchQuery by rememberSaveable { mutableStateOf("") }
     var suggestions by remember { mutableStateOf(listOf<String>()) }
     var selectingPoint by rememberSaveable { mutableStateOf(false) }
     var pickedLatLng by remember { mutableStateOf<LatLng?>(null) }
 
-    // Cámara compartida
+    // Cámara compartida y geolocalización
     var cameraPosition by remember {
         mutableStateOf(
             CameraPosition(
@@ -112,7 +135,6 @@ fun MapScreen(
             )
         )
     }
-    // Centrar en ubicación actual cuando permiso otorgado
     LaunchedEffect(hasLocationPermission) {
         if (hasLocationPermission) {
             val fusedClient = LocationServices.getFusedLocationProviderClient(context)
@@ -152,8 +174,23 @@ fun MapScreen(
             )
         },
         topBar = {
-            // BARRA DE BÚSQUEDA + ICONO MARCADOR
-            Column {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                // Connectivity indicator
+                Column(modifier = Modifier.padding(8.dp)) {
+                    Text(
+                        text = if (isOnline) "online" else "offline",
+                        color = if (isOnline) Color.Green else Color.Red,
+                        fontSize = 14.sp
+                    )
+                    if (!isOnline) {
+                        Text(
+                            text = "Ultima conexión: $lastConnectedTime",
+                            fontSize = 12.sp,
+                            color = Color.Gray
+                        )
+                    }
+                }
+                // Search bar + pick icon
                 Row(
                     Modifier
                         .fillMaxWidth()
@@ -171,7 +208,7 @@ fun MapScreen(
                             } else emptyList()
                         },
                         modifier = Modifier.weight(1f),
-                        placeholder = { Text("Search location") },
+                        placeholder = { Text("Buscar dirección") },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                         keyboardActions = KeyboardActions(onSearch = {
@@ -185,14 +222,18 @@ fun MapScreen(
                             suggestions = emptyList()
                         })
                     )
-                    IconButton(onClick = { selectingPoint = !selectingPoint }) {
-                        Icon(Icons.Default.Place, contentDescription = "Pick point")
+                    IconButton(onClick = { selectingPoint = true }) {
+                        Icon(
+                            Icons.Default.Place,
+                            contentDescription = "Pick point",
+                            tint = Color.Red
+                        )
                     }
                 }
-                // SUGERENCIAS desplegables
                 DropdownMenu(
                     expanded = suggestions.isNotEmpty(),
-                    onDismissRequest = { suggestions = emptyList() }
+                    onDismissRequest = { suggestions = emptyList() },
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     suggestions.forEach { address ->
                         DropdownMenuItem(
@@ -214,6 +255,8 @@ fun MapScreen(
             }
         }
     ) { innerPadding ->
-        MapBody(contentPadding = innerPadding)
+        MapBody(
+            contentPadding = innerPadding,
+        )
     }
 }
