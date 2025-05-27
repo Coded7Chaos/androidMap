@@ -179,7 +179,7 @@ fun MyMap(
         mutableStateOf(
             CameraPosition(
                 target = LatLng(-16.5, -68.15),
-                zoom = 18.0
+                zoom = 15.0
             )
         )
     }
@@ -196,7 +196,7 @@ fun MyMap(
                     // Actualiza entire CameraPosition para re-componer
                     cameraPositionState.value = CameraPosition(
                         target = LatLng(it.latitude, it.longitude),
-                        zoom = 18.0
+                        zoom = 15.0
                     )
                 }
             }

@@ -8,7 +8,9 @@ import android.content.Context
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -175,21 +177,7 @@ fun MapScreen(
         },
         topBar = {
             Column(modifier = Modifier.fillMaxWidth()) {
-                // Connectivity indicator
-                Column(modifier = Modifier.padding(8.dp)) {
-                    Text(
-                        text = if (isOnline) "online" else "offline",
-                        color = if (isOnline) Color.Green else Color.Red,
-                        fontSize = 14.sp
-                    )
-                    if (!isOnline) {
-                        Text(
-                            text = "Ultima conexión: $lastConnectedTime",
-                            fontSize = 12.sp,
-                            color = Color.Gray
-                        )
-                    }
-                }
+
                 // Search bar + pick icon
                 Row(
                     Modifier
@@ -253,10 +241,46 @@ fun MapScreen(
                     }
                 }
             }
+        },
+        floatingActionButton = {
+            ConnectivityStatus(
+                isOnline = isOnline,
+                lastConnectedTime = lastConnectedTime,
+                modifier = Modifier
+            )
         }
     ) { innerPadding ->
         MapBody(
             contentPadding = innerPadding,
         )
+    }
+}
+
+@Composable
+fun ConnectivityStatus(
+    isOnline: Boolean,
+    lastConnectedTime: String,
+    modifier: Modifier = Modifier
+){
+    // Connectivity indicator
+    Column(modifier = Modifier
+        .background(
+            color = if(isOnline) Color(0xFF4CAF50) else Color(0xFF072A8C),
+            shape = RoundedCornerShape(3.dp)
+        )
+        .padding(horizontal = 8.dp, vertical = 4.dp)) {
+
+        Text(
+            text = if (isOnline) "online" else "offline",
+            color = Color.White,
+            fontSize = 15.sp
+        )
+        if (!isOnline) {
+            Text(
+                text = "Ultima conexión: $lastConnectedTime",
+                fontSize = 12.sp,
+                color = Color.White.copy(alpha = 0.8f)
+            )
+        }
     }
 }
