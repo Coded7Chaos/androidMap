@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.Flow
 interface ParadaRepository {
     fun getAllParadasStream(): Flow<List<Parada>>
 
-    fun getParadaStream(id: Int): Flow<Parada?>
+    fun getParadaStream(id_parada: Int): Flow<Parada>
 
     suspend fun insertParada(parada: Parada)
 

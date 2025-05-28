@@ -20,6 +20,7 @@ import com.tonygnk.maplibredemo.ui.navigation.NavigationDestination
 import com.tonygnk.maplibredemo.ui.rutasPuma.RutaPumaDestination.rutaIdArg
 import androidx.compose.runtime.getValue
 import com.tonygnk.maplibredemo.MyMap
+import com.tonygnk.maplibredemo.models.Parada
 
 object RutaPumaDestination : NavigationDestination {
     override val route = "ruta_puma"
@@ -39,7 +40,7 @@ fun RutaPumaScreen(
     viewModel: RutaPumaViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ){
     val coordenadas by viewModel.puntosRuta.collectAsState()
-
+    val paradas by viewModel.detalleParadas.collectAsState()
 
     Scaffold(
         topBar = {
@@ -57,7 +58,8 @@ fun RutaPumaScreen(
                     end = innerPadding.calculateEndPadding(LocalLayoutDirection.current),
                     top = innerPadding.calculateTopPadding()
                 ),
-            puntosRuta = coordenadas
+            puntosRuta = coordenadas,
+            paradas = paradas
         )
     }
 }
@@ -65,8 +67,12 @@ fun RutaPumaScreen(
 @Composable
 fun RutaPumaBody(
     modifier: Modifier = Modifier,
-    puntosRuta: PuntosRuta
+    puntosRuta: PuntosRuta,
+    paradas: List<Parada>
 ) {
-    MyMap(modifier,
-        puntosList = puntosRuta.puntosList)
+    MyMap(
+        modifier,
+        puntosList = puntosRuta.puntosList,
+        paradasList = paradas
+    )
 }

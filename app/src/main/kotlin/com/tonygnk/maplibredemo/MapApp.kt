@@ -47,13 +47,16 @@ import androidx.navigation.NavHostController
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.tonygnk.maplibredemo.models.Coordenada
+import com.tonygnk.maplibredemo.models.Parada
 import com.tonygnk.maplibredemo.ui.navigation.MapNavHost
+import org.maplibre.android.annotations.Marker
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.maps.Style
 import org.ramani.compose.CameraPosition
 import org.ramani.compose.Circle
 import org.ramani.compose.MapLibre
 import org.ramani.compose.Polyline
+import org.ramani.compose.Symbol
 
 @Composable
 fun MapApp(navController: NavHostController = rememberNavController()){
@@ -138,7 +141,8 @@ fun BottomNavBar(
 @Composable
 fun MyMap(
     modifier: Modifier = Modifier,
-    puntosList: List<Coordenada>
+    puntosList: List<Coordenada>,
+    paradasList: List<Parada> = emptyList()
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -242,6 +246,17 @@ fun MyMap(
                     radius = 10f,
                     color = "Blue",
                     zIndex = 2
+                )
+            }
+            paradasList.forEach { parada ->
+                Symbol(
+                    center = LatLng(parada.lat, parada.lon),
+                    imageId = R.drawable.perfil1,    // tu drawable
+                    color = "black",
+                    isDraggable = false,
+                    size = 0.02f
+                    //imageAnchor = "1"
+                    //zIndex = 2f                         // orden de apilado
                 )
             }
         }

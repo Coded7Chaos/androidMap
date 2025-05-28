@@ -41,6 +41,8 @@ object AppViewModelProvider {
         initializer {
             RutaPumaViewModel(
                 mapApplication().container.rutaRepository,
+                mapApplication().container.paradaRutaRepository,
+                mapApplication().container.paradaRepository,
                 savedStateHandle = createSavedStateHandle()
             )
         }
