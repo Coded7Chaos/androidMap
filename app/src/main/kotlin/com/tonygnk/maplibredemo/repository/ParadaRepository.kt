@@ -13,4 +13,6 @@ interface ParadaRepository {
     suspend fun deleteParada(parada: Parada)
 
     suspend fun updateParada(parada: Parada)
+
+    fun searchParadaByNombre(nombreDeParada: String): Flow<List<String>>
 }

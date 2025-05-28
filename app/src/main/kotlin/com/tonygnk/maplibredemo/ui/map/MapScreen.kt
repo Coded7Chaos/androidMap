@@ -6,13 +6,19 @@ import android.net.Uri
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import android.opengl.Matrix.length
+import android.text.TextUtils.replace
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.*
@@ -27,23 +33,33 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.isTraversalGroup
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.traversalIndex
+import androidx.compose.ui.text.style.TextAlign
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tonygnk.maplibredemo.BottomNavBar
 import com.tonygnk.maplibredemo.MapStyleManager
 import com.tonygnk.maplibredemo.MyMap
 import com.tonygnk.maplibredemo.R
 import com.tonygnk.maplibredemo.models.Coordenada
+import com.tonygnk.maplibredemo.ui.AppViewModelProvider
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.maps.Style
 import org.ramani.compose.CameraPosition
 import org.ramani.compose.Circle
 import org.ramani.compose.MapLibre
 import org.ramani.compose.Polyline
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.Priority
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.getValue
 import java.time.LocalDateTime
+import androidx.compose.runtime.getValue
 import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -52,15 +68,7 @@ object MapDestination {
     val titleRes = R.string.map_title
 }
 
-@Composable
-fun MapBody(
-    contentPadding: PaddingValues = PaddingValues(0.dp),
-) {
-    MyMap(
-        modifier = Modifier.padding(contentPadding),
-        puntosList = listOf(),
-    )
-}
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,8 +77,10 @@ fun MapScreen(
     navigateToProfile: () -> Unit,
     navigateToRutasPuma: () -> Unit,
     navigateToMap: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: MapViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
+
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val geocoder = remember { Geocoder(context) }
@@ -103,6 +113,7 @@ fun MapScreen(
             ) == PackageManager.PERMISSION_GRANTED
         )
     }
+
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { results ->
@@ -137,6 +148,7 @@ fun MapScreen(
             )
         )
     }
+    /*
     LaunchedEffect(hasLocationPermission) {
         if (hasLocationPermission) {
             val fusedClient = LocationServices.getFusedLocationProviderClient(context)
@@ -152,18 +164,9 @@ fun MapScreen(
             }
         }
     }
+*/
 
-    // Estilo offline MBTiles
-    val styleBuilder = remember {
-        val styleFile = MapStyleManager(context)
-            .setupStyle().let { result ->
-                when (result) {
-                    is MapStyleManager.StyleSetupResult.Success -> result.styleFile
-                    is MapStyleManager.StyleSetupResult.Error -> throw result.exception
-                }
-            }
-        Style.Builder().fromUri(Uri.fromFile(styleFile).toString())
-    }
+    val resultadosQuery by viewModel.resultadosQuery.collectAsState()
 
     Scaffold(
         bottomBar = {
@@ -176,71 +179,12 @@ fun MapScreen(
             )
         },
         topBar = {
-            Column(modifier = Modifier.fillMaxWidth()) {
-
-                // Search bar + pick icon
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    TextField(
-                        value = searchQuery,
-                        onValueChange = { text ->
-                            searchQuery = text
-                            suggestions = if (text.length >= 3) {
-                                geocoder.getFromLocationName(text, 5)
-                                    ?.mapNotNull { it.getAddressLine(0) }
-                                    ?: emptyList()
-                            } else emptyList()
-                        },
-                        modifier = Modifier.weight(1f),
-                        placeholder = { Text("Buscar dirección") },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                        keyboardActions = KeyboardActions(onSearch = {
-                            geocoder.getFromLocationName(searchQuery, 1)
-                                ?.firstOrNull()
-                                ?.let {
-                                    val target = LatLng(it.latitude, it.longitude)
-                                    cameraPosition = CameraPosition(target, 18.0)
-                                    pickedLatLng = target
-                                }
-                            suggestions = emptyList()
-                        })
-                    )
-                    IconButton(onClick = { selectingPoint = true }) {
-                        Icon(
-                            Icons.Default.Place,
-                            contentDescription = "Pick point",
-                            tint = Color.Red
-                        )
-                    }
-                }
-                DropdownMenu(
-                    expanded = suggestions.isNotEmpty(),
-                    onDismissRequest = { suggestions = emptyList() },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    suggestions.forEach { address ->
-                        DropdownMenuItem(
-                            text = { Text(address) },
-                            onClick = {
-                                searchQuery = address
-                                suggestions = emptyList()
-                                geocoder.getFromLocationName(address, 1)
-                                    ?.firstOrNull()
-                                    ?.let {
-                                        val target = LatLng(it.latitude, it.longitude)
-                                        cameraPosition = CameraPosition(target, 18.0)
-                                        pickedLatLng = target
-                                    }
-                            }
-                        )
-                    }
-                }
-            }
+            SearchHeader(
+                searchValue = viewModel.searchValue,
+                updateSearchValue = viewModel::updateSearchValue,
+                viewModel = viewModel,
+                resultadosQuery = resultadosQuery.nombresParadas
+            )
         },
         floatingActionButton = {
             ConnectivityStatus(
@@ -250,9 +194,65 @@ fun MapScreen(
             )
         }
     ) { innerPadding ->
-        MapBody(
-            contentPadding = innerPadding,
+        MyMap(
+            modifier = Modifier.padding(innerPadding),
+            puntosList = listOf(),
         )
+    }
+}
+
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SearchHeader(
+    searchValue: String,
+    updateSearchValue: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: MapViewModel,
+    resultadosQuery: List<String>
+){
+
+    var expanded by rememberSaveable { mutableStateOf(false) }
+
+    Box(
+        modifier
+            .fillMaxSize()
+            .semantics { isTraversalGroup = true }
+    ) {
+        SearchBar(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .semantics { traversalIndex = 0f },
+            inputField = {
+                SearchBarDefaults.InputField(
+                    query = searchValue,
+                    onQueryChange = { updateSearchValue(it)},
+                    expanded = expanded,
+                    onExpandedChange = { expanded = it },
+                    placeholder = { Text("Busca una parada por su nombre") },
+                    onSearch = {}
+                )
+            },
+            expanded = expanded,
+            onExpandedChange = { expanded = it },
+        ) {
+
+            // Display search results in a scrollable column
+            Column(Modifier.verticalScroll(rememberScrollState())) {
+                resultadosQuery.forEach { result ->
+                    ListItem(
+                        headlineContent = { Text(result) },
+                        modifier = Modifier
+                            .clickable {
+                                updateSearchValue(result)
+                                expanded = false
+                            }
+                            .fillMaxWidth()
+                    )
+                }
+            }
+        }
     }
 }
 

@@ -27,7 +27,7 @@ object AppViewModelProvider {
             UserViewModel(mapApplication().container.userRepository)
         }
         initializer {
-            MapViewModel()
+            MapViewModel(mapApplication().container.paradaRepository)
         }
         initializer {
             PerfilViewModel()

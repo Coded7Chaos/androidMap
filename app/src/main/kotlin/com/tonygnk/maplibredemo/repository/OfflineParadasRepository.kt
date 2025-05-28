@@ -14,4 +14,6 @@ class OfflineParadasRepository(private val paradaDao: ParadaDao) : ParadaReposit
     override suspend fun deleteParada(parada: Parada) = paradaDao.delete(parada)
 
     override suspend fun updateParada(parada: Parada) = paradaDao.update(parada)
+
+    override fun searchParadaByNombre(nombreDeParada: String): Flow<List<String>> = paradaDao.busquedaNombresParadas(nombreDeParada)
 }

@@ -31,7 +31,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.tonygnk.maplibredemo.ui.map.MapBody
 import com.tonygnk.maplibredemo.ui.navigation.NavigationDestination
 import java.nio.file.WatchEvent
 import com.tonygnk.maplibredemo.R.drawable.perfil1
