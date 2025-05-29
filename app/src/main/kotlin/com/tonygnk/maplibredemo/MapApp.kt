@@ -251,10 +251,11 @@ fun MyMap(
             paradasList.forEach { parada ->
                 Symbol(
                     center = LatLng(parada.lat, parada.lon),
-                    imageId = R.drawable.perfil1,    // tu drawable
+                    imageId = R.drawable.parada_bus,    // tu drawable
                     color = "black",
                     isDraggable = false,
-                    size = 0.02f
+                    size = 0.04f,
+                    zIndex = 3
                     //imageAnchor = "1"
                     //zIndex = 2f                         // orden de apilado
                 )

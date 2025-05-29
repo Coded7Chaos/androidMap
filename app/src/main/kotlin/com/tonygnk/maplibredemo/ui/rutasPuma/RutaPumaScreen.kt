@@ -1,11 +1,27 @@
 package com.tonygnk.maplibredemo.ui.rutasPuma
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -19,6 +35,10 @@ import com.tonygnk.maplibredemo.ui.AppViewModelProvider
 import com.tonygnk.maplibredemo.ui.navigation.NavigationDestination
 import com.tonygnk.maplibredemo.ui.rutasPuma.RutaPumaDestination.rutaIdArg
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import com.tonygnk.maplibredemo.MyMap
 import com.tonygnk.maplibredemo.models.Parada
 
@@ -49,7 +69,56 @@ fun RutaPumaScreen(
                 canNavigateBack = true,
                 navigateUp = navigateBack
             )
-        },  modifier = modifier
+        },
+        bottomBar = {
+            Surface(
+                color = Color(0xFF66C2BB),
+                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+                tonalElevation = 8.dp
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 25.dp, horizontal = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // "píldora" del título de la parada
+                    Surface(
+                        color = Color(0xFFDFA23A),
+                        shape = RoundedCornerShape(50),
+                    ) {
+                        Text(
+                            text = "Titulo Parada",
+                            color = Color.White,
+                            modifier = Modifier
+                                .padding(vertical = 8.dp, horizontal = 24.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // botón de "Paradas"
+                    Button(
+                        onClick = {},
+                        shape = RoundedCornerShape(50),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF0F0F0)),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Place,
+                            contentDescription = "Paradas",
+                            tint = Color.Black,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(text = "Paradas", color = Color.Black)
+                    }
+                }
+            }
+        },
+        modifier = modifier
     ) { innerPadding ->
         RutaPumaBody(
             modifier = Modifier
