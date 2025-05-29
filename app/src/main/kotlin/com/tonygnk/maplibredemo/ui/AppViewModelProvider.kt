@@ -13,6 +13,8 @@ import com.tonygnk.maplibredemo.ui.map.RouteDetailViewModel
 import com.tonygnk.maplibredemo.ui.map.RouteSearchViewModel
 import com.tonygnk.maplibredemo.ui.parada.ParadaEntryViewModel
 import com.tonygnk.maplibredemo.ui.perfil.PerfilViewModel
+import com.tonygnk.maplibredemo.ui.rutasPuma.ParadasPumaListScreen
+import com.tonygnk.maplibredemo.ui.rutasPuma.ParadasPumaListViewModel
 import com.tonygnk.maplibredemo.ui.rutasPuma.RutaPumaViewModel
 import com.tonygnk.maplibredemo.ui.rutasPuma.RutasPumaListViewModel
 import com.tonygnk.maplibredemo.ui.usuario.UserViewModel
@@ -39,6 +41,13 @@ object AppViewModelProvider {
         }
         initializer {
             RutasPumaListViewModel(mapApplication().container.rutaRepository)
+        }
+        initializer {
+            ParadasPumaListViewModel(
+                mapApplication().container.paradaRepository,
+                mapApplication().container.paradaRutaRepository,
+                savedStateHandle = createSavedStateHandle()
+            )
         }
         initializer {
             RutaPumaViewModel(

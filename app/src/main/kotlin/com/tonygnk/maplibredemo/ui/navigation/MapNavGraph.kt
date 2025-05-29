@@ -28,6 +28,8 @@ import com.tonygnk.maplibredemo.ui.parada.ParadaEntryDestination
 import com.tonygnk.maplibredemo.ui.parada.ParadaEntryScreen
 import com.tonygnk.maplibredemo.ui.perfil.PerfilScreen
 import com.tonygnk.maplibredemo.ui.perfil.ProfileDestination
+import com.tonygnk.maplibredemo.ui.rutasPuma.ParadasPumaDestination
+import com.tonygnk.maplibredemo.ui.rutasPuma.ParadasPumaListScreen
 import com.tonygnk.maplibredemo.ui.rutasPuma.RutaPumaDestination
 import com.tonygnk.maplibredemo.ui.rutasPuma.RutaPumaDestination.rutaNombre
 import com.tonygnk.maplibredemo.ui.rutasPuma.RutaPumaScreen
@@ -106,16 +108,32 @@ fun MapNavHost(
             )
         }
 
+        composable(
+            route = ParadasPumaDestination.routeWithArgs,
+            arguments = listOf(
+                navArgument(ParadasPumaDestination.rutaIdArg) { type = NavType.IntType },
+            )
+        ) {
+            ParadasPumaListScreen(
+                navigateBack = { navController.navigateUp() },
+                navigateToParada = {
+                    navController.navigate(ProfileDestination.route)
+                },
+                modifier = modifier
+            )
+        }
         composable(route = RutaPumaDestination.routeWithArgs,
                    arguments = listOf(
                        navArgument(RutaPumaDestination.rutaIdArg) { type = NavType.IntType },
                        navArgument(RutaPumaDestination.rutaNombre) { type = NavType.StringType }
                    )
             ) {backStackEntry ->
+                val rutaId = backStackEntry.arguments!!.getInt(RutaPumaDestination.rutaIdArg)
                 val rutaNombre = backStackEntry.arguments?.getString("rutaNombre")
                 RutaPumaScreen(
                     titulo = rutaNombre ?: "Detalle de ruta",
-                    navigateBack = { navController.navigateUp() }
+                    navigateBack = { navController.navigateUp() },
+                    navigateToParadaList = { navController.navigate("${ParadasPumaDestination.route}/${rutaId}") }
                 )
         }
 
