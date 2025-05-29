@@ -14,5 +14,5 @@ interface ParadaRepository {
 
     suspend fun updateParada(parada: Parada)
 
-    fun searchParadaByNombre(nombreDeParada: String): Flow<List<String>>
+    fun searchParadaByNombre(nombreDeParada: String): Flow<List<Parada>>
 }

@@ -35,6 +35,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -47,7 +48,9 @@ import androidx.navigation.NavHostController
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.tonygnk.maplibredemo.models.Coordenada
+import com.tonygnk.maplibredemo.models.Parada
 import com.tonygnk.maplibredemo.ui.navigation.MapNavHost
+import org.ramani.compose.Symbol
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.maps.Style
 import org.ramani.compose.CameraPosition
@@ -136,121 +139,31 @@ fun BottomNavBar(
 
 
 @Composable
-fun MyMap(
+fun PumaRutasMap(
     modifier: Modifier = Modifier,
-    puntosList: List<Coordenada>
+    puntosList: List<Coordenada> = listOf(),
+    paradasList: List<Parada> = listOf(),
 ) {
     val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
 
-    // Estado de permiso (no Saveable para re-pedir cada inicio)
-    var hasLocationPermission by remember {
-        mutableStateOf(
-            ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-        )
-    }
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestMultiplePermissions()
-    ) { results ->
-        hasLocationPermission = results[Manifest.permission.ACCESS_FINE_LOCATION] == true
-    }
-
-    // Observa ciclo de vida para re-pedir permiso en ON_START
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_START && !hasLocationPermission) {
-                permissionLauncher.launch(
-                    arrayOf(
-                        Manifest.permission.ACCESS_FINE_LOCATION,
-                        Manifest.permission.ACCESS_COARSE_LOCATION
-                    )
-                )
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
-    }
-
-    // Estado de cámara como MutableState para detectar cambios
-    val cameraPositionState = remember {
-        mutableStateOf(
-            CameraPosition(
-                target = LatLng(-16.5, -68.15),
-                zoom = 15.0
-            )
-        )
-    }
-
-    // Obtiene ubicación precisa tras permiso y actualiza estado
-    LaunchedEffect(hasLocationPermission) {
-        if (hasLocationPermission) {
-            val fusedClient = LocationServices.getFusedLocationProviderClient(context)
-            fusedClient.getCurrentLocation(
-                Priority.PRIORITY_HIGH_ACCURACY,
-                null
-            ).addOnSuccessListener { location ->
-                location?.let {
-                    // Actualiza entire CameraPosition para re-componer
-                    cameraPositionState.value = CameraPosition(
-                        target = LatLng(it.latitude, it.longitude),
-                        zoom = 15.0
-                    )
-                }
-            }
-        }
-    }
-
-    // Estilo de mapa
     val styleBuilder = remember {
-        val styleFile = MapStyleManager(context)
-            .setupStyle().let { result ->
-                when (result) {
-                    is MapStyleManager.StyleSetupResult.Success -> result.styleFile
-                    is MapStyleManager.StyleSetupResult.Error -> throw result.exception
-                }
+        val styleManager = MapStyleManager(context)
+        val style = when (val result = styleManager.setupStyle()) {
+            is MapStyleManager.StyleSetupResult.Error -> {
+                throw result.exception
             }
-        Style.Builder().fromUri(Uri.fromFile(styleFile).toString())
-    }
 
-    // Convertir ruta a puntos
-    val puntos = puntosList.map { LatLng(it.lat, it.lon) }
-
-    // Mostrar mapa
-    Box(modifier = modifier.fillMaxSize()) {
-        MapLibre(
-            modifier = Modifier.fillMaxSize(),
-            styleBuilder = styleBuilder,
-            cameraPosition = cameraPositionState.value,
-            /*
-            onMapClick = { latLng ->
-                if (selectingPoint) {
-                    pickedLatLng = latLng
-                    cameraPosition = CameraPosition(latLng, 18.0)
-                    selectingPoint = false
-                }
-            }*/
-
-        ) {
-            Polyline(puntos, color = "Red", lineWidth = 5.0f)
-            val cameraPositionState = cameraPositionState.value.target
-            if (hasLocationPermission && cameraPositionState != null) {
-                Circle(
-                    center = cameraPositionState,
-                    radius = 10f,
-                    color = "Blue",
-                    zIndex = 2
-                )
-            }
+            is MapStyleManager.StyleSetupResult.Success -> result.styleFile
         }
+        Style.Builder().fromUri(
+            Uri.fromFile(style).toString()
+        )
     }
-    /*
+
     val cameraPosition = rememberSaveable {
         CameraPosition(
             target = LatLng(-16.5, -68.15),
-            zoom = 18.0,
+            zoom = 11.0,
         )
     }
 
@@ -259,16 +172,26 @@ fun MyMap(
         styleBuilder = styleBuilder,
         cameraPosition = cameraPosition
     ) {
-
+        // Add map markers, polylines, etc.
+        var point = LatLng(-16.5, -68.15)
+        Symbol(point, 0.5f, "red", false)
         fun List<Coordenada>.toLatLngList(): List<LatLng> {
             return this.map { coordenada ->
                 LatLng(coordenada.lat, coordenada.lon)
             }
         }
+
+        fun List<Parada>.toLatLngList(): List<LatLng> {
+            return this.map { parada ->
+                LatLng(parada.lat, parada.lon)
+            }
+        }
+
+
         val puntos = puntosList.toLatLngList()
         Polyline(puntos, color = "Red", lineWidth = 5.0f)
 
     }
-
-     */
 }
+
+

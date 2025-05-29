@@ -19,7 +19,7 @@ import com.tonygnk.maplibredemo.ui.AppViewModelProvider
 import com.tonygnk.maplibredemo.ui.navigation.NavigationDestination
 import com.tonygnk.maplibredemo.ui.rutasPuma.RutaPumaDestination.rutaIdArg
 import androidx.compose.runtime.getValue
-import com.tonygnk.maplibredemo.MyMap
+import com.tonygnk.maplibredemo.PumaRutasMap
 
 object RutaPumaDestination : NavigationDestination {
     override val route = "ruta_puma"
@@ -67,6 +67,6 @@ fun RutaPumaBody(
     modifier: Modifier = Modifier,
     puntosRuta: PuntosRuta
 ) {
-    MyMap(modifier,
+    PumaRutasMap(modifier,
         puntosList = puntosRuta.puntosList)
 }

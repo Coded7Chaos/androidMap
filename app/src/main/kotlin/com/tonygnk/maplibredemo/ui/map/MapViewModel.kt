@@ -3,6 +3,7 @@ package com.tonygnk.maplibredemo.ui.map
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -27,7 +28,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.stateIn
 
 
-data class ResultadosQuery( val nombresParadas: List<String> = listOf())
+data class ResultadosQuery( val nombresParadas: List<Parada> = listOf())
 
 class MapViewModel( private val paradaRepository: ParadaRepository ): ViewModel() {
 
@@ -57,6 +58,8 @@ class MapViewModel( private val paradaRepository: ParadaRepository ): ViewModel(
     fun updateSearchValue(newValue:String){
         searchValue = newValue
     }
+
+
 
 }
 

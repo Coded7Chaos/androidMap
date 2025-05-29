@@ -25,6 +25,6 @@ interface ParadaDao {
     @Query("SELECT * FROM paradas ORDER BY nombre ASC")
     fun getAllItems(): Flow<List<Parada>>
 
-    @Query("SELECT nombre FROM paradas WHERE nombre LIKE '%' || :nombreDeParada || '%'")
-    fun busquedaNombresParadas(nombreDeParada: String): Flow<List<String>>
+    @Query("SELECT * FROM paradas WHERE nombre LIKE '%' || :nombreDeParada || '%'")
+    fun busquedaNombresParadas(nombreDeParada: String): Flow<List<Parada>>
 }
