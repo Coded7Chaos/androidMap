@@ -229,13 +229,13 @@ fun MapScreen(
             )
         },
 
-        /*floatingActionButton = {
+        floatingActionButton = {
             ConnectivityStatus(
                 isOnline = isOnline,
                 lastConnectedTime = lastConnectedTime,
                 modifier = Modifier
             )
-        }*/
+        }
     ) { innerPadding ->
         Box(
             modifier = Modifier

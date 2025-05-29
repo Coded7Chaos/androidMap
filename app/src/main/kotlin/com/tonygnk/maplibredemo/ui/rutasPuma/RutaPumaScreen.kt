@@ -57,6 +57,7 @@ object RutaPumaDestination : NavigationDestination {
 fun RutaPumaScreen(
     titulo: String = "Vista de ruta",
     navigateBack: () -> Unit,
+    navigateToParadaList: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: RutaPumaViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ){
@@ -87,7 +88,7 @@ fun RutaPumaScreen(
 
                     // botón de "Paradas"
                     Button(
-                        onClick = {},
+                        onClick = navigateToParadaList,
                         shape = RoundedCornerShape(50),
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF0F0F0)),
                         modifier = Modifier

@@ -173,7 +173,7 @@ fun PumaRutasMap(
     MapLibre(
         modifier = modifier,
         styleBuilder = styleBuilder,
-        cameraPosition = cameraPosition
+        cameraPosition = cameraPosition,
     ) {
         // Add map markers, polylines, etc.
         var point = LatLng(-16.5, -68.15)
