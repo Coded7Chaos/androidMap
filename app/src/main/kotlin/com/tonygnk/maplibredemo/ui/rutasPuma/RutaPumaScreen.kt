@@ -74,15 +74,14 @@ fun RutaPumaScreen(
         },
         bottomBar = {
             Surface(
-                color = Color(0xFFcccccc),
+                color = Color(0xFF66C2BB),
                 shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
                 tonalElevation = 8.dp
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 25.dp, horizontal = 16.dp)
-                        .padding(start = 10.dp, end = 10.dp, top = 5.dp, bottom = 25.dp),
+                        .padding(vertical = 25.dp, horizontal = 16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
 

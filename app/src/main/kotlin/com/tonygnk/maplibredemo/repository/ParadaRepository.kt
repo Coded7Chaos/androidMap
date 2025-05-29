@@ -1,6 +1,7 @@
 package com.tonygnk.maplibredemo.repository
 
 import com.tonygnk.maplibredemo.models.Parada
+import com.tonygnk.maplibredemo.models.ParadaRuta
 import kotlinx.coroutines.flow.Flow
 
 interface ParadaRepository {
@@ -15,4 +16,5 @@ interface ParadaRepository {
     suspend fun updateParada(parada: Parada)
 
     fun searchParadaByNombre(nombreDeParada: String): Flow<List<Parada>>
+
 }

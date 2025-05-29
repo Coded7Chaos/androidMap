@@ -4,16 +4,26 @@ package com.tonygnk.maplibredemo.ui.navigation
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.tonygnk.maplibredemo.ui.AppViewModelProvider
 import com.tonygnk.maplibredemo.ui.favoritos.FavoritosDestination
 import com.tonygnk.maplibredemo.ui.favoritos.FavoritosScreen
 import com.tonygnk.maplibredemo.ui.home.HomeDestination
 import com.tonygnk.maplibredemo.ui.home.HomeScreen
 import com.tonygnk.maplibredemo.ui.map.MapDestination
 import com.tonygnk.maplibredemo.ui.map.MapScreen
+import com.tonygnk.maplibredemo.ui.map.RouteDetailDestination
+import com.tonygnk.maplibredemo.ui.map.RouteDetailScreen
+import com.tonygnk.maplibredemo.ui.map.RouteDetailViewModel
+import com.tonygnk.maplibredemo.ui.map.RouteLoadingDestination
+import com.tonygnk.maplibredemo.ui.map.RouteLoadingScreen
+import com.tonygnk.maplibredemo.ui.map.RouteResultsDestination
+import com.tonygnk.maplibredemo.ui.map.RouteResultsScreen
+import com.tonygnk.maplibredemo.ui.map.RouteSearchViewModel
 import com.tonygnk.maplibredemo.ui.parada.ParadaEntryDestination
 import com.tonygnk.maplibredemo.ui.parada.ParadaEntryScreen
 import com.tonygnk.maplibredemo.ui.perfil.PerfilScreen
@@ -142,5 +152,45 @@ fun MapNavHost(
                 )
         }
 
+        composable(RouteLoadingDestination.route) {
+            RouteLoadingScreen(
+                onResultsReady   = {
+                    navController.navigate(RouteResultsDestination.route)
+                }
+            )
+        }
+
+        composable(RouteResultsDestination.route) {
+            val resultsVm: RouteSearchViewModel =
+                viewModel(factory = AppViewModelProvider.Factory)
+            RouteResultsScreen(
+                viewModel    = resultsVm,
+                onItemClick  = { route ->
+                    navController.navigate(
+                        "${RouteDetailDestination.routeWithoutArgs}/${route.id_ruta_puma}"
+                    )
+                }
+            )
+        }
+
+
+        composable(
+            route     = RouteDetailDestination.routeWithArgs,
+            arguments = listOf(
+                navArgument(RouteDetailDestination.routeIdArg) {
+                    type = NavType.IntType
+                }
+            )
+        ) { backStack ->
+            val id = backStack.arguments!!.getInt(RouteDetailDestination.routeIdArg)
+            val detailVm: RouteDetailViewModel =
+                viewModel(factory = AppViewModelProvider.Factory)
+            RouteDetailScreen(
+                viewModel   = detailVm,
+                routeId     = id,
+                navigateUp  = { navController.navigateUp() }
+            )
+        }
     }
-}
+
+    }
