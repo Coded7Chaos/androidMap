@@ -39,7 +39,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.tonygnk.maplibredemo.MyMap
 import com.tonygnk.maplibredemo.models.Parada
 import com.tonygnk.maplibredemo.PumaRutasMap
 
@@ -140,7 +139,7 @@ fun RutaPumaBody(
     puntosRuta: PuntosRuta,
     paradas: List<Parada>
 ) {
-    MyMap(
+    PumaRutasMap(
         modifier,
         puntosList = puntosRuta.puntosList,
         paradasList = paradas

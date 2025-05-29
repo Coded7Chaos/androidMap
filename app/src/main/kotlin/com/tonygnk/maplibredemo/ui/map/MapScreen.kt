@@ -245,8 +245,8 @@ fun MapScreen(
             // 5. Componente de mapa puro
             MapaInteractivo(
                 cameraPositionState  = cameraPositionState,
-                originPoint = originPoint.value!!,
-                destinationPoint = destinationPoint.value!!,
+                originPoint = originPoint.value,
+                destinationPoint = destinationPoint.value,
                 isSelectingDestination = isSelectingDestination,
                 hasLocationPermission = hasLocationPermission,
                 onMapClick = { latLng ->
@@ -304,8 +304,8 @@ fun MapScreen(
 @Composable
 fun MapaInteractivo(
     cameraPositionState: MutableState<CameraPosition>,
-    originPoint: LatLng,
-    destinationPoint: LatLng,
+    originPoint: LatLng?,
+    destinationPoint: LatLng?,
     isSelectingDestination: Boolean,
     hasLocationPermission: Boolean,
     onMapClick: (LatLng) -> Unit,
