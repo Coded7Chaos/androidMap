@@ -140,7 +140,9 @@ fun MapScreen(
     navigateToProfile: () -> Unit,
     navigateToRutasPuma: () -> Unit,
     navigateToMap: () -> Unit,
+    navigateToLoader: () -> Unit,
     modifier: Modifier = Modifier,
+    routeSearchViewModel: RouteSearchViewModel = viewModel(factory = AppViewModelProvider.Factory),
     viewModel: MapViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val context = LocalContext.current
@@ -406,6 +408,8 @@ fun MapScreen(
             // ——— Menú inferior “Buscar ruta” + botón retroceso ———
 
             if (originPoint.value != null && destinationPoint.value != null) {
+                val origin = originPoint.value
+                val dest   = destinationPoint.value
                 Box(
                     Modifier
                         .fillMaxWidth()
@@ -432,7 +436,12 @@ fun MapScreen(
                         )
                     }
                     Button(
-                        onClick = { /* TODO: lanzar búsqueda de ruta */ },
+                        onClick = {
+                            // 1) Paso los puntos al ViewModel
+                            routeSearchViewModel.setPoints(origin!!, dest!!)
+                            // 2) Muevo a la pantalla de carga/resultados
+                            navigateToLoader()
+                        },
                         modifier = Modifier.align(Alignment.Center)
                             .height(48.dp)
                     ) {

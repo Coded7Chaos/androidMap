@@ -29,17 +29,18 @@ fun RouteLoadingScreen(
     viewModel: RouteSearchViewModel = viewModel (factory = AppViewModelProvider.Factory),
     onResultsReady: (List<Ruta>) -> Unit
 ){
-    LaunchedEffect(Unit) {
-        // asume que tienes origin/dest en tu ViewModel o los pasas aquí
-        val o = viewModel.getOrigin()
-        val d = viewModel.getDestination()
-        val results = viewModel.searchRoutes(o, d)
-        onResultsReady(results)
+    val details by viewModel.detailPairs.collectAsState()
+
+    LaunchedEffect(details) {
+        if (details.isNotEmpty()) {
+            //onResultsReady()
+        }
     }
 
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         CircularProgressIndicator()
         Spacer(Modifier.height(8.dp))
-        Text(stringResource(R.string.route_loading_title))
+        Text("Buscando rutas…")
     }
 }
+

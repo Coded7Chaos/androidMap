@@ -17,7 +17,7 @@ import com.tonygnk.maplibredemo.ui.home.HomeScreen
 import com.tonygnk.maplibredemo.ui.map.MapDestination
 import com.tonygnk.maplibredemo.ui.map.MapScreen
 import com.tonygnk.maplibredemo.ui.map.RouteDetailDestination
-import com.tonygnk.maplibredemo.ui.map.RouteDetailScreen
+//import com.tonygnk.maplibredemo.ui.map.RouteDetailScreen
 import com.tonygnk.maplibredemo.ui.map.RouteDetailViewModel
 import com.tonygnk.maplibredemo.ui.map.RouteLoadingDestination
 import com.tonygnk.maplibredemo.ui.map.RouteLoadingScreen
@@ -78,8 +78,10 @@ fun MapNavHost(
                 navigateToRutasPuma = { navController.navigate(RutasPumaDestination.route) },
                 navigateToProfile = { navController.navigate(ProfileDestination.route) },
                 navigateToFavoritos = { navController.navigate(FavoritosDestination.route) },
-                navigateToMap = { navController.navigate(MapDestination.route) }
-            )
+                navigateToMap = { navController.navigate(MapDestination.route) },
+                navigateToLoader = { navController.navigate(RouteResultsDestination.route) },
+
+                )
         }
         composable(route = FavoritosDestination.route) {
             FavoritosScreen(
@@ -153,9 +155,15 @@ fun MapNavHost(
         }
 
         composable(RouteLoadingDestination.route) {
+            val vm: RouteSearchViewModel = viewModel(factory = AppViewModelProvider.Factory)
             RouteLoadingScreen(
-                onResultsReady   = {
-                    navController.navigate(RouteResultsDestination.route)
+                viewModel       = vm,
+                onResultsReady  = {
+                    // Aquí haces el ruteo:
+                    navController.navigate(RouteResultsDestination.route) {
+                        // Para que al volver no regreses al loader
+                        popUpTo(RouteLoadingDestination.route) { inclusive = true }
+                    }
                 }
             )
         }
@@ -183,13 +191,11 @@ fun MapNavHost(
             )
         ) { backStack ->
             val id = backStack.arguments!!.getInt(RouteDetailDestination.routeIdArg)
-            val detailVm: RouteDetailViewModel =
-                viewModel(factory = AppViewModelProvider.Factory)
-            RouteDetailScreen(
+            /*RouteDetailScreen(
                 viewModel   = detailVm,
                 routeId     = id,
                 navigateUp  = { navController.navigateUp() }
-            )
+            )*/
         }
     }
 

@@ -1,5 +1,7 @@
 package com.tonygnk.maplibredemo.ui.map
 
+import android.content.ContentValues.TAG
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tonygnk.maplibredemo.models.Parada
@@ -18,6 +20,7 @@ import org.maplibre.android.geometry.LatLng
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
@@ -28,8 +31,8 @@ class RouteSearchViewModel(
     private val paradaRutaRepository: ParadaRutaRepository,
     private val paradaRepository: ParadaRepository,
 
-    ): ViewModel() {}
-/*    private val helper = ParadasFunctions(paradaRepository, paradaRutaRepository)
+    ): ViewModel() {
+    private val helper = ParadasFunctions(paradaRepository, paradaRutaRepository)
 
     // 1) Origen y destino (setean cuando pulsas “Buscar ruta”)
     private val _origin     = MutableStateFlow<LatLng?>(null)
@@ -62,14 +65,13 @@ class RouteSearchViewModel(
                 started       = SharingStarted.WhileSubscribed(5_000),
                 initialValue  = emptyList()
             )
-/*
     // 3) Flujo de pares detallados (ParadaRutaDetail) filtrando por orden
     val detailPairs: StateFlow<List<Pair<ParadaRutaDetail, ParadaRutaDetail>>> =
         routeCandidates
             .flatMapLatest { relations ->
                 flow {
                     // extrae ParadaRutaDetail combinados
-                    val list = helper.extractParadaRutaDetails(relations)
+                    val list = helper.extractCoordenadaPairs(relations)
                     emit(list)
                 }
             }
@@ -79,6 +81,20 @@ class RouteSearchViewModel(
                 initialValue = emptyList()
             )
 
+    init {
+        // Loguear candidatos crudos
+        viewModelScope.launch {
+            routeCandidates.collect { list ->
+                Log.d(TAG, "routeCandidates: $list")
+            }
+        }
+        // Loguear pares detallados
+        viewModelScope.launch {
+            detailPairs.collect { pairs ->
+                Log.d(TAG, "detailPairs: $pairs")
+            }
+        }
+    }
 }
 
 
@@ -88,5 +104,3 @@ data class RouteCandidate(
     val originParadaRuta: ParadaRuta,
     val destParadaRuta:   ParadaRuta
 )
-
- */

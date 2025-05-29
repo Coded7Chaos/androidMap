@@ -10,7 +10,5 @@ class RouteDetailViewModel(
     private val handle: SavedStateHandle
 ): ViewModel() {
     val routeId: Int = handle.get<Int>("routeId")!!
-    suspend fun loadDetail(): Ruta {
-        return repo.getRutaStream(routeId)
-    }
+
 }
