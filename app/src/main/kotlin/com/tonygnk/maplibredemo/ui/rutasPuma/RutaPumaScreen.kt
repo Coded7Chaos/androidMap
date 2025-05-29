@@ -39,6 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.tonygnk.maplibredemo.PumaRutasMap
 import com.tonygnk.maplibredemo.models.Parada
 import com.tonygnk.maplibredemo.PumaRutasMap
 
@@ -82,20 +83,6 @@ fun RutaPumaScreen(
                         .padding(vertical = 25.dp, horizontal = 16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // "píldora" del título de la parada
-                    Surface(
-                        color = Color(0xFFDFA23A),
-                        shape = RoundedCornerShape(50),
-                    ) {
-                        Text(
-                            text = "Titulo Parada",
-                            color = Color.White,
-                            modifier = Modifier
-                                .padding(vertical = 8.dp, horizontal = 24.dp)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
 
                     // botón de "Paradas"
                     Button(

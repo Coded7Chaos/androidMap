@@ -54,6 +54,7 @@ import org.maplibre.android.annotations.Marker
 import org.ramani.compose.Symbol
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.maps.Style
+import org.maplibre.android.plugins.annotation.Symbol
 import org.ramani.compose.CameraPosition
 import org.ramani.compose.Circle
 import org.ramani.compose.MapLibre
@@ -192,6 +193,16 @@ fun PumaRutasMap(
 
         val puntos = puntosList.toLatLngList()
         Polyline(puntos, color = "Red", lineWidth = 5.0f)
+
+        paradasList.forEach { parada ->
+            Symbol(
+                center = LatLng(parada.lat, parada.lon),
+                imageId = R.drawable.parada_bus,
+                color = "black",
+                isDraggable = false,
+                size = 0.03f
+            )
+        }
 
     }
 }
