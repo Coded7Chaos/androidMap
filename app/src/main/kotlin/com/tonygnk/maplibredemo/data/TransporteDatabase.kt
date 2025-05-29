@@ -20,6 +20,7 @@ abstract class TransporteDatabase : RoomDatabase() {
     abstract fun paradaDao(): ParadaDao
     abstract fun userDao(): UserDao
     abstract fun rutaDao(): RutaDao
+    abstract fun paradaRutaDao(): ParadaRutaDao
 
     companion object {
         @Volatile

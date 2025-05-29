@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -30,14 +29,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tonygnk.maplibredemo.BottomNavBar
-import com.tonygnk.maplibredemo.MapTopAppBar
 import com.tonygnk.maplibredemo.R
 import com.tonygnk.maplibredemo.models.Ruta
-import com.tonygnk.maplibredemo.models.User
 import com.tonygnk.maplibredemo.ui.AppViewModelProvider
-import com.tonygnk.maplibredemo.ui.home.HomeDestination
 import com.tonygnk.maplibredemo.ui.navigation.NavigationDestination
-import com.tonygnk.maplibredemo.ui.usuario.UserViewModel
 
 object RutasPumaDestination : NavigationDestination {
     override val route = "rutas_puma"
@@ -55,7 +50,7 @@ fun RutasPumaListScreen(
     navigateToRuta: (Int, String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: RutasPumaListViewModel = viewModel(factory = AppViewModelProvider.Factory)
-){
+) {
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val rutaUiState by viewModel.rutaUiState.collectAsState()

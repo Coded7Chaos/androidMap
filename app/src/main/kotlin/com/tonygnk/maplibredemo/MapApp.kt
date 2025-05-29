@@ -50,6 +50,7 @@ import com.google.android.gms.location.Priority
 import com.tonygnk.maplibredemo.models.Coordenada
 import com.tonygnk.maplibredemo.models.Parada
 import com.tonygnk.maplibredemo.ui.navigation.MapNavHost
+import org.maplibre.android.annotations.Marker
 import org.ramani.compose.Symbol
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.maps.Style
@@ -57,6 +58,7 @@ import org.ramani.compose.CameraPosition
 import org.ramani.compose.Circle
 import org.ramani.compose.MapLibre
 import org.ramani.compose.Polyline
+import org.ramani.compose.Symbol
 
 @Composable
 fun MapApp(navController: NavHostController = rememberNavController()){
