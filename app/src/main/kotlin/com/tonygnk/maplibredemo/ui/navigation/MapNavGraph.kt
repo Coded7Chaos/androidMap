@@ -22,6 +22,8 @@ import com.tonygnk.maplibredemo.ui.rutasPuma.ParadasPumaDestination
 import com.tonygnk.maplibredemo.ui.rutasPuma.ParadasPumaListScreen
 import com.tonygnk.maplibredemo.ui.rutasPuma.RutaPumaDestination
 import com.tonygnk.maplibredemo.ui.rutasPuma.RutaPumaDestination.rutaNombre
+import com.tonygnk.maplibredemo.ui.rutasPuma.RutaPumaParadaDestination
+import com.tonygnk.maplibredemo.ui.rutasPuma.RutaPumaParadaScreen
 import com.tonygnk.maplibredemo.ui.rutasPuma.RutaPumaScreen
 import com.tonygnk.maplibredemo.ui.rutasPuma.RutasPumaDestination
 import com.tonygnk.maplibredemo.ui.rutasPuma.RutasPumaListScreen
@@ -97,17 +99,30 @@ fun MapNavHost(
                 navigateToMap = { navController.navigate(MapDestination.route) }
             )
         }
-
+        composable(
+            route = RutaPumaParadaDestination.routeWithArgs,
+            arguments = listOf(
+                navArgument(RutaPumaParadaDestination.rutaIdArg) { type = NavType.IntType },
+                navArgument(RutaPumaParadaDestination.paradaIdArg) { type = NavType.IntType }
+            )
+        ) {
+            RutaPumaParadaScreen(
+                navigateBack = { navController.navigateUp() }
+            )
+        }
         composable(
             route = ParadasPumaDestination.routeWithArgs,
             arguments = listOf(
                 navArgument(ParadasPumaDestination.rutaIdArg) { type = NavType.IntType },
             )
-        ) {
+        ) { backStackEntry ->
+            val rutaId = backStackEntry.arguments!!.getInt(RutaPumaDestination.rutaIdArg)
+            val paradaId = backStackEntry.arguments!!.getInt(RutaPumaParadaDestination.paradaIdArg)
             ParadasPumaListScreen(
                 navigateBack = { navController.navigateUp() },
                 navigateToParada = {
-                    navController.navigate(ProfileDestination.route)
+
+                    navController.navigateUp()
                 },
                 modifier = modifier
             )

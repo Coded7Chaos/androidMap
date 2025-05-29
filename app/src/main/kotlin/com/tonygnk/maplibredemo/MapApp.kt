@@ -146,6 +146,8 @@ fun PumaRutasMap(
     modifier: Modifier = Modifier,
     puntosList: List<Coordenada> = listOf(),
     paradasList: List<Parada> = listOf(),
+    lat: Double = -16.5,
+    long: Double = -68.15
 ) {
     val context = LocalContext.current
 
@@ -165,7 +167,7 @@ fun PumaRutasMap(
 
     val cameraPosition = rememberSaveable {
         CameraPosition(
-            target = LatLng(-16.5, -68.15),
+            target = LatLng(lat, long),
             zoom = 11.0,
         )
     }

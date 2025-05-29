@@ -13,6 +13,7 @@ import com.tonygnk.maplibredemo.ui.parada.ParadaEntryViewModel
 import com.tonygnk.maplibredemo.ui.perfil.PerfilViewModel
 import com.tonygnk.maplibredemo.ui.rutasPuma.ParadasPumaListScreen
 import com.tonygnk.maplibredemo.ui.rutasPuma.ParadasPumaListViewModel
+import com.tonygnk.maplibredemo.ui.rutasPuma.RutaPumaParadaViewModel
 import com.tonygnk.maplibredemo.ui.rutasPuma.RutaPumaViewModel
 import com.tonygnk.maplibredemo.ui.rutasPuma.RutasPumaListViewModel
 import com.tonygnk.maplibredemo.ui.usuario.UserViewModel
@@ -36,6 +37,14 @@ object AppViewModelProvider {
         }
         initializer {
             FavoritosViewModel()
+        }
+        initializer {
+            RutaPumaParadaViewModel(
+                mapApplication().container.rutaRepository,
+                mapApplication().container.paradaRepository,
+                mapApplication().container.paradaRutaRepository,
+                savedStateHandle = createSavedStateHandle()
+            )
         }
         initializer {
             RutasPumaListViewModel(mapApplication().container.rutaRepository)
