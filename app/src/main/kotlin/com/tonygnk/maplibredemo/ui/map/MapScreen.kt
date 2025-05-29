@@ -229,13 +229,13 @@ fun MapScreen(
             )
         },
 
-        floatingActionButton = {
+        /*floatingActionButton = {
             ConnectivityStatus(
                 isOnline = isOnline,
                 lastConnectedTime = lastConnectedTime,
                 modifier = Modifier
             )
-        }
+        }*/
     ) { innerPadding ->
         Box(
             modifier = Modifier
@@ -243,7 +243,7 @@ fun MapScreen(
                 .padding(innerPadding)
         ) {
             // 5. Componente de mapa puro
-            MapaInteractivo(
+            /*MapaInteractivo(
                 cameraPositionState  = cameraPositionState,
                 originPoint = originPoint.value!!,
                 destinationPoint = destinationPoint.value!!,
@@ -255,7 +255,7 @@ fun MapScreen(
                         isSelectingDestination = false
                     }
                 }
-            )
+            )*/
 
             // ——— Menú inferior “Buscar ruta” + botón retroceso ———
 
