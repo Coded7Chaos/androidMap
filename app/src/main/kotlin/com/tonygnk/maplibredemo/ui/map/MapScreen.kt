@@ -1,16 +1,26 @@
 package com.tonygnk.maplibredemo.ui.map
 
-import android.location.Geocoder
+
 import android.net.ConnectivityManager
 import android.net.Uri
 import android.Manifest
+import android.R.attr.priority
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
+import android.location.LocationListener
+import android.location.LocationManager
+
 import android.net.Network
 import android.opengl.Matrix.length
+import android.os.Bundle
+import android.os.Looper
 import android.text.TextUtils.replace
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -63,10 +73,25 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.getValue
 import java.time.LocalDateTime
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.unit.Dp
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.tonygnk.maplibredemo.models.Parada
+import kotlinx.coroutines.suspendCancellableCoroutine
+import org.ramani.compose.Symbol
 import java.time.format.DateTimeFormatter
+import com.google.android.gms.tasks.CancellationToken
+import com.google.android.gms.tasks.CancellationTokenSource
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 object MapDestination {
@@ -74,7 +99,39 @@ object MapDestination {
     val titleRes = R.string.map_title
 }
 
+// --------------------------------------------
+// 1) Helper para await en coroutines
+// --------------------------------------------
 
+@SuppressLint("MissingPermission")
+suspend fun FusedLocationProviderClient.awaitLocationOrNull(context: Context): android.location.Location? {
+    // 1) Verifico permiso justo antes
+    if (ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) != PackageManager.PERMISSION_GRANTED
+    ) return null
+
+    // 2) Creo la fuente de cancelación
+    val tokenSource = CancellationTokenSource()
+
+    return suspendCancellableCoroutine { cont ->
+        // 3) Llamo al API usando el token de la fuente
+        this.getCurrentLocation(
+            Priority.PRIORITY_HIGH_ACCURACY,
+            tokenSource.token
+        ).addOnSuccessListener { loc ->
+            cont.resume(loc)
+        }.addOnFailureListener {
+            cont.resume(null)
+        }
+
+        // 4) Si la coroutine se cancela, cancelo el tokenSource
+        cont.invokeOnCancellation {
+            tokenSource.cancel()  // ← aquí sí existe: CancellationTokenSource.cancel()
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -86,10 +143,7 @@ fun MapScreen(
     modifier: Modifier = Modifier,
     viewModel: MapViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
-
     val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
-
     //
     // 1. Permisos de ubicación (se piden en ON_START si no están)
     //
@@ -100,24 +154,25 @@ fun MapScreen(
             ) == PackageManager.PERMISSION_GRANTED
         )
     }
+
+
     val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestMultiplePermissions()
-    ) { results ->
-        hasLocationPermission = results[Manifest.permission.ACCESS_FINE_LOCATION] == true
+        ActivityResultContracts.RequestPermission()
+    ) {
+        granted ->
+        hasLocationPermission = granted
+        Log.d("MapScreenDebug", "Permiso FINE_LOCATION granted=$granted")
     }
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_START && !hasLocationPermission) {
-                permissionLauncher.launch(
-                    arrayOf(
-                        Manifest.permission.ACCESS_FINE_LOCATION,
-                        Manifest.permission.ACCESS_COARSE_LOCATION
-                    )
-                )
-            }
+
+
+
+    LaunchedEffect(Unit) {
+        if (!hasLocationPermission) {
+            Log.d("MapScreenDebug", "Lanzando diálogo de permiso")
+            permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        } else {
+            Log.d("MapScreenDebug", "Ya tengo permiso")
         }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
     //
     // 2. Estado de cámara y marcador
@@ -127,37 +182,99 @@ fun MapScreen(
         mutableStateOf(
             CameraPosition(
                 target = LatLng(-16.4897, -68.1193),
-                zoom = 12.0
+                zoom = 14.0
             )
         )
     }
     // Punto origen que esta en la ubicacion del usuario
     val originPoint = remember { mutableStateOf<LatLng?>(null) }
 
+    val fusedClient = remember(context) {
+        LocationServices.getFusedLocationProviderClient(context)
+    }
+
     // Coordenada seleccionada por el usuario (null = sin marcador), representa el destino
     var destinationPoint = remember { mutableStateOf<LatLng?>(null) }
     var isSelectingDestination by remember { mutableStateOf(false) }
-    //
-    // 3. Al obtener permiso, intento leer la última ubicación conocida
-    //
-    LaunchedEffect(hasLocationPermission) {
-        if (hasLocationPermission) {
-            val fusedClient = LocationServices.getFusedLocationProviderClient(context)
-            fusedClient.getCurrentLocation(
-                Priority.PRIORITY_HIGH_ACCURACY,
-                null
-            ).addOnSuccessListener { location ->
-                location?.let {
-                    val userLatLng = LatLng(it.latitude, it.longitude)
-                    // Centro la cámara en la posición del usuario
-                    cameraPositionState.value = CameraPosition(userLatLng, 15.0)
-                    // Y marco ese punto
-                    originPoint.value = userLatLng
+
+
+
+    DisposableEffect(hasLocationPermission) {
+        if (!hasLocationPermission) {
+            onDispose { }
+        } else {
+            // Intento rápido con lastLocation
+            fusedClient.lastLocation
+                .addOnSuccessListener { loc ->
+                    if (loc != null) {
+                        Log.d("MapScreenDebug", "← lastLocation OK: $loc")
+                        val p = LatLng(loc.latitude, loc.longitude)
+                        cameraPositionState.value = CameraPosition(p, 15.0)
+                        originPoint.value = p
+                    } else {
+                        Log.d("MapScreenDebug", "← lastLocation null, suscribiendo fused updates")
+                        // Configuro Fused updates
+                        val request = LocationRequest.create().apply {
+                            priority = Priority.PRIORITY_HIGH_ACCURACY
+                            interval = 5_000L
+                            fastestInterval = 2_000L
+                        }
+                        val fusedCallback = object : LocationCallback() {
+                            override fun onLocationResult(result: LocationResult) {
+                                result.lastLocation?.let { location ->
+                                    Log.d("MapScreenDebug", "← fused onLocationResult: $location")
+                                    val p = LatLng(location.latitude, location.longitude)
+                                    cameraPositionState.value = CameraPosition(p, 15.0)
+                                    originPoint.value = p
+                                    fusedClient.removeLocationUpdates(this)
+                                }
+                            }
+                        }
+                        fusedClient.requestLocationUpdates(
+                            request,
+                            fusedCallback,
+                            Looper.getMainLooper()
+                        )
+                        onDispose {
+                            Log.d("MapScreenDebug", "→ Removing fused updates")
+                            fusedClient.removeLocationUpdates(fusedCallback)
+                        }
+                    }
                 }
-            }
+                .addOnFailureListener { e ->
+                    Log.w("MapScreenDebug", "FusedLocation failed, fallback to LocationManager: $e")
+                    // Fallback a LocationManager
+                    val lm = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+                    val gpsListener = object : LocationListener {
+                        override fun onLocationChanged(loc: android.location.Location) {
+                            Log.d("MapScreenDebug", "← GPS onLocationChanged: $loc")
+                            val p = LatLng(loc.latitude, loc.longitude)
+                            cameraPositionState.value = CameraPosition(p, 15.0)
+                            originPoint.value = p
+                            lm.removeUpdates(this)
+                        }
+                        @Deprecated("Deprecated in Java")
+                        override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
+                        override fun onProviderEnabled(provider: String) {}
+                        override fun onProviderDisabled(provider: String) {}
+                    }
+                    // Pido una sola actualización GPS
+                    if (ContextCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.ACCESS_FINE_LOCATION
+                        ) == PackageManager.PERMISSION_GRANTED
+                    ) {
+                        lm.requestSingleUpdate(
+                            LocationManager.GPS_PROVIDER,
+                            gpsListener,
+                            Looper.getMainLooper()
+                        )
+                    }
+                }
+
+            onDispose { /* nada más que limpiar aquí */ }
         }
     }
-
 
     // Connectivity state
     val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -229,13 +346,13 @@ fun MapScreen(
             )
         },
 
-        /*floatingActionButton = {
+        floatingActionButton = {
             ConnectivityStatus(
                 isOnline = isOnline,
                 lastConnectedTime = lastConnectedTime,
                 modifier = Modifier
             )
-        }*/
+        }
     ) { innerPadding ->
         Box(
             modifier = Modifier
@@ -243,7 +360,7 @@ fun MapScreen(
                 .padding(innerPadding)
         ) {
             // 5. Componente de mapa puro
-            /*MapaInteractivo(
+            MapaInteractivo(
                 cameraPositionState  = cameraPositionState,
                 originPoint = originPoint.value,
                 destinationPoint = destinationPoint.value,
@@ -255,16 +372,45 @@ fun MapScreen(
                         isSelectingDestination = false
                     }
                 }
-            )*/
+            )
+            // Tamaño de la cruz
+            val crossSize: Dp = 16.dp
+            // Grosor de la línea
+            val strokeWidthDp: Dp = 1.dp
+            Canvas(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .size(crossSize)
+            ) {
+                val strokeWidthPx = strokeWidthDp.toPx()
+                // centro del Canvas
+                val cx = size.width / 2
+                val cy = size.height / 2
+
+                // Línea vertical
+                drawLine(
+                    color = Color.Black.copy(alpha = 0.6f),
+                    start = Offset(cx, 0f),
+                    end = Offset(cx, size.height),
+                    strokeWidth = strokeWidthPx
+                )
+                // Línea horizontal
+                drawLine(
+                    color = Color.Black.copy(alpha = 0.6f),
+                    start = Offset(0f, cy),
+                    end = Offset(size.width, cy),
+                    strokeWidth = strokeWidthPx
+                )
+            }
 
             // ——— Menú inferior “Buscar ruta” + botón retroceso ———
 
-            if (originPoint.value != null && destinationPoint.value != null && !isSelectingDestination) {
+            if (originPoint.value != null && destinationPoint.value != null) {
                 Box(
                     Modifier
                         .fillMaxWidth()
                         .align(Alignment.BottomCenter)
-                        .padding(bottom = 64.dp) // ajusta para que quede encima del BottomNavBar
+                        .padding(0.dp) // ajusta para que quede encima del BottomNavBar
                         .background(
                             Color.White.copy(alpha = 0.9f),
                             shape = RoundedCornerShape(12.dp)
@@ -338,17 +484,39 @@ fun MapaInteractivo(
 
         // 10. Si hay el punto de origen, dibujo un símbolo o círculo en él
         originPoint?.let { pos ->
-            //Marker(
+            /*Symbol(
+                center = LatLng(pos.latitude, pos.longitude),
+                imageId = R.drawable.persona,
+                color = "black",
+                isDraggable = false,
+                size = 0.03f
+            )*/
+            Circle(
+                center = pos,
+                radius = 8f,
+                color  = "Blue",
+                zIndex = 2
+            )
 
-            //)
         }
 
         // 10. Si hay el punto destino, dibujo un símbolo o círculo en él
         destinationPoint?.let { pos ->
-            //Symbol(
-
-            //)
+            /*Symbol(
+                center = LatLng(pos.latitude, pos.longitude),
+                imageId = R.drawable.parada_bus,
+                color = "black",
+                isDraggable = true,
+                size = 0.03f
+            )*/
+            Circle(
+                center = pos,
+                radius = 8f,
+                color  = "Red",
+                zIndex = 3
+            )
         }
+
     }
 
 }
@@ -376,6 +544,7 @@ fun SearchHeader(
         SearchBar(
             modifier = Modifier
                 .align(Alignment.TopCenter)
+                .matchParentSize()
                 .semantics { traversalIndex = 0f },
             inputField = {
                 SearchBarDefaults.InputField(

@@ -9,6 +9,8 @@ import com.tonygnk.maplibredemo.MapApplication
 import com.tonygnk.maplibredemo.ui.favoritos.FavoritosViewModel
 import com.tonygnk.maplibredemo.ui.home.HomeViewModel
 import com.tonygnk.maplibredemo.ui.map.MapViewModel
+import com.tonygnk.maplibredemo.ui.map.RouteDetailViewModel
+import com.tonygnk.maplibredemo.ui.map.RouteSearchViewModel
 import com.tonygnk.maplibredemo.ui.parada.ParadaEntryViewModel
 import com.tonygnk.maplibredemo.ui.perfil.PerfilViewModel
 import com.tonygnk.maplibredemo.ui.rutasPuma.RutaPumaViewModel
@@ -46,7 +48,25 @@ object AppViewModelProvider {
                 savedStateHandle = createSavedStateHandle()
             )
         }
+
+        initializer {
+            RouteSearchViewModel(mapApplication().container.rutaRepository,
+                mapApplication().container.paradaRutaRepository,
+                mapApplication().container.paradaRepository,)
+        }
+
+        initializer {
+            RouteDetailViewModel(
+                mapApplication().container.rutaRepository,
+                createSavedStateHandle()
+            )
+        }
+
     }
+
+
+
+
 }
 
 fun CreationExtras.mapApplication(): MapApplication =
