@@ -1,6 +1,7 @@
 package com.tonygnk.maplibredemo.ui.map
 
 import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -13,6 +14,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
@@ -36,21 +38,36 @@ import com.tonygnk.maplibredemo.MapTopAppBar
 import com.tonygnk.maplibredemo.models.Coordenada
 import com.tonygnk.maplibredemo.ui.map.RouteDetailDestination.titleRes
 import com.tonygnk.maplibredemo.ui.rutasPuma.PumaRutasMap
+import com.tonygnk.maplibredemo.ui.rutasPuma.RutaDetailDestination.rutaIdArg
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
 
 object RouteDetailDestination : NavigationDestination {
     override val route    = "route_detail"
     override val titleRes = R.string.route_detail_title
-    }
+    const val idInicio = "idInicio"
+    const val idFinal = "idFinal"
+    val routeWithArgs = "${RouteDetailDestination.route}/{$idInicio}/{$idFinal}"
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RouteDetailScreen(
     viewModel: RouteSearchViewModel,
+    idInicio: Int,
+    idFin: Int,
     navigateBack:() -> Unit,
-    ){}/*
-    val coordA by viewModel.coordenadaA.collectAsState(initial = null)
-    val coordB by viewModel.coordenadaB.collectAsState(initial = null)
-    val listaCoordenadas by viewModel.rutaCoordenadas.collectAsState(initial = emptyList())
+    ){
+
+    val coordenadasFlow: Flow<List<Coordenada>> = viewModel.repo.getCoordenadasRuta(idInicio, idFin)
+
+    LaunchedEffect(idInicio, idFin) {
+        coordenadasFlow.collect { lista ->
+            // Aquí hacemos el log en el Catlog
+            Log.d("RouteCoordenadas", "Coordenadas de $idInicio..$idFin = $lista")
+        }
+    }
+
 
     val cameraPositionState = remember {
         mutableStateOf(
@@ -72,7 +89,7 @@ fun RouteDetailScreen(
     ) { innerPadding ->
         Mapa(
             cameraPositionState = cameraPositionState,
-            puntosList = listaCoordenadas,
+            puntosList = listOf(),
             modifier = Modifier.padding(innerPadding)
         )
     }
@@ -88,8 +105,6 @@ fun Mapa(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
-
 
     //Preparo el estilo offline con MapStyleManager
     val styleBuilder = remember {
@@ -106,6 +121,8 @@ fun Mapa(
         )
     }
 
+
+
     MapLibre(
         modifier = modifier.fillMaxSize(),
         styleBuilder = styleBuilder,
@@ -116,4 +133,3 @@ fun Mapa(
 
     }
 
-*/

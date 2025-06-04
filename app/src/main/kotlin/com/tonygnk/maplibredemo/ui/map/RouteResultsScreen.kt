@@ -54,18 +54,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tonygnk.maplibredemo.repository.ParadaRutaDetail
+import com.tonygnk.maplibredemo.ui.rutasPuma.RutaDetailDestination
+import com.tonygnk.maplibredemo.ui.rutasPuma.RutaDetailDestination.rutaIdArg
 import org.maplibre.android.geometry.LatLng
 
 object RouteResultsDestination : NavigationDestination {
     override val route    = "route_results"
     override val titleRes = R.string.route_results_title
-}
+   }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RouteResultsScreen(
     viewModel: RouteSearchViewModel,
-    onItemClick: () -> Unit
+    onItemClick: (Int, Int) -> Unit
 ){
 
     var userOrigin by remember { mutableStateOf<LatLng?>(null) }
@@ -79,51 +81,42 @@ fun RouteResultsScreen(
 
     val candidates by viewModel.routeCandidates.collectAsStateWithLifecycle()
     val details by viewModel.detailPairs.collectAsStateWithLifecycle()
+    val bestDetailPairs by viewModel.filteredPairs.collectAsStateWithLifecycle()
+    val withRuta        by viewModel.detailsWithRuta.collectAsStateWithLifecycle(initialValue = emptyList())
+
 
     Column(Modifier.fillMaxSize().padding(16.dp)) {
-
-        Text("Pares detallados", style = MaterialTheme.typography.titleSmall)
-        LazyColumn {
-            items(details) { (o, d) ->
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(o.nombre, style = MaterialTheme.typography.bodySmall)
-                    Text("→", style = MaterialTheme.typography.bodySmall)
-                    Text(d.nombre, style = MaterialTheme.typography.bodySmall)
-                }
-                Divider()
-            }
-        }
-
-
-        Text("Resultados de la búsqueda", style = MaterialTheme.typography.titleMedium)
-        Spacer(Modifier.height(8.dp))
-
-        if (candidates.isEmpty()) {
+        if (bestDetailPairs.isEmpty()) {
             Text("No se encontraron rutas", style = MaterialTheme.typography.bodyMedium)
         } else {
+            Spacer(Modifier.height(16.dp))
+            Text("Mejores Pares detallados por ruta", style = MaterialTheme.typography.titleSmall)
             LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(candidates) { cand ->
+                items(withRuta) { (A, B, nombreRuta) ->
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
+                                onItemClick(
+                                    A.idCoordenada,
+                                    B.idCoordenada
+                                )
                             },
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                     ) {
                         Column(Modifier.padding(12.dp)) {
-                            Text("Ruta: ${cand.paradaA.nombre}", style = MaterialTheme.typography.bodyLarge)
-                            Text("Parada origen: ${cand.paradaA.nombre}",
-                                style = MaterialTheme.typography.bodyMedium)
-                            Text("Parada destino: ${cand.paradaB.nombre}",
-                                style = MaterialTheme.typography.bodyMedium)
+                            Text("Ruta: ${nombreRuta}", style = MaterialTheme.typography.bodyLarge)
+                            Spacer(Modifier.height(16.dp))
+                            Text("Parada inicial: ${A.nombre}", style = MaterialTheme.typography.bodyMedium)
+                            Text("Parada final: ${B.nombre}", style = MaterialTheme.typography.bodyMedium)
                         }
+                        Divider()
                     }
                 }
             }
         }
 
-        Spacer(Modifier.height(16.dp))
 
     }
 }

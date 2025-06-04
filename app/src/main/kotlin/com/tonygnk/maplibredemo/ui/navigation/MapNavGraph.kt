@@ -197,26 +197,39 @@ fun MapNavHost(
                 )
                 RouteResultsScreen(
                     viewModel = viewModel,
-                    onItemClick = { navController.navigate(RouteDetailDestination.route)
-                    }
+                    onItemClick = { idInicio, idFin ->
+                        navController.navigate("${RouteDetailDestination.route}/${idInicio}/${idFin}") }
                 )
             }
 
-//            composable(RouteDetailDestination.route)
-//            { backStackEntry ->
-//            val parentEntry = remember(backStackEntry) {
-//                navController.getBackStackEntry("rf")
-//            }
-//
-//            val viewModel: RouteSearchViewModel = viewModel(
-//                parentEntry,
-//                factory = AppViewModelProvider.Factory
-//            )
-//            RouteDetailScreen(
-//                viewModel = viewModel,
-//                navigateBack = { navController.popBackStack() }
-//            )
-//        }
+            composable(
+                route = RouteDetailDestination.routeWithArgs,
+                arguments = listOf(
+                    navArgument(RouteDetailDestination.idInicio) { type = NavType.IntType },
+                    navArgument(RouteDetailDestination.idFinal) { type = NavType.IntType }
+                )
+            )
+            { backStackEntry ->
+
+                val args = backStackEntry.arguments!!
+                val idInicio = args.getInt(RouteDetailDestination.idInicio)
+                val idFin    = args.getInt(RouteDetailDestination.idFinal)
+
+            val parentEntry = remember(backStackEntry) {
+                navController.getBackStackEntry("rf")
+            }
+
+            val viewModel: RouteSearchViewModel = viewModel(
+                parentEntry,
+                factory = AppViewModelProvider.Factory
+            )
+            RouteDetailScreen(
+                viewModel = viewModel,
+                idInicio = idInicio,
+                idFin = idFin,
+                navigateBack = { navController.popBackStack() }
+            )
+            }
         }
 
     }

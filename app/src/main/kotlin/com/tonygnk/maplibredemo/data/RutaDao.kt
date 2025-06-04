@@ -34,4 +34,6 @@ interface RutaDao {
     @Query("SELECT * FROM coordenadas WHERE id_coordenada BETWEEN :idInicio AND :idFin ORDER BY id_coordenada")
     fun getCoordenadasRuta(idInicio: Int, idFin: Int): Flow<List<Coordenada>>
 
+    @Query("SELECT nombre FROM rutas WHERE id_ruta_puma=:id_ruta_puma")
+    suspend fun getRutaNombre(id_ruta_puma: Int): String
 }

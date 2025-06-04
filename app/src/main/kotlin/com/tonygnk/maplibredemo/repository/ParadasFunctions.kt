@@ -24,7 +24,7 @@ class ParadasFunctions(
             }
     }
 
-    private fun distancia(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double
+    fun distancia(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double
     {
         val R = 6371000.0 // Radio de la Tierra en metros
         val dLat = Math.toRadians(lat2 - lat1)

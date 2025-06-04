@@ -35,5 +35,7 @@ class OfflineRutaRepository(private val rutaDao: RutaDao): RutaRepository {
                 rutaDao.getCoordenadasRuta(coordenadaA, coordenadaB)
             }
     }
-    override fun getCoordenadasRuta(inicio: Coordenada, fin: Coordenada): Flow<List<Coordenada>> = rutaDao.getCoordenadasRuta(inicio.id_coordenada, fin.id_coordenada)
+    override fun getCoordenadasRuta(inicio: Int, fin: Int): Flow<List<Coordenada>> = rutaDao.getCoordenadasRuta(inicio, fin)
+
+    override suspend fun getRutaNombre(id_ruta_puma: Int) = rutaDao.getRutaNombre(id_ruta_puma)
 }

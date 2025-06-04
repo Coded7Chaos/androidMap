@@ -31,7 +31,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.flowOf
 
 class RouteSearchViewModel(
-    private val repo: RutaRepository,
+    val repo: RutaRepository,
     private val paradaRutaRepository: ParadaRutaRepository,
     private val paradaRepository: ParadaRepository,
 
@@ -99,5 +99,87 @@ class RouteSearchViewModel(
             }
         }
     }
+
+    val filteredPairs: StateFlow<List<Pair<ParadaRutaDetail, ParadaRutaDetail>>> =
+        combine(
+            detailPairs,               // Lista de todos los pares detallados
+            _origin.filterNotNull(),   // Origen actual
+            _destination.filterNotNull() // Destino actual
+        ) { allPairs, origin, dest ->
+            // 1) Si no hay origen/destino o no hay pares, devolvemos vacío:
+            if (allPairs.isEmpty()) return@combine emptyList()
+
+            // 2) Agrupamos todos los pares por idRuta:
+            val grouped: Map<Int, List<Pair<ParadaRutaDetail, ParadaRutaDetail>>> =
+                allPairs.groupBy { it.first.idRuta }
+
+            // 3) Para cada grupo, buscamos el par de menor “score”:
+            val bestPerRoute = mutableListOf<Pair<ParadaRutaDetail, ParadaRutaDetail>>()
+            for ((rutaId, pares) in grouped) {
+                var bestPair: Pair<ParadaRutaDetail, ParadaRutaDetail>? = null
+                var bestScore = Double.MAX_VALUE
+                for ((a, b) in pares) {
+                    val distA = helper.distancia(origin.latitude, origin.longitude, a.lat, a.lon)
+                    val distB = helper.distancia(dest.latitude, dest.longitude, b.lat, b.lon)
+                    val score = distA + distB
+
+                    if (score < bestScore) {
+                        bestScore = score
+                        bestPair = (a to b)
+                    }
+                }
+                bestPair?.let { bestPerRoute.add(it) }
+            }
+            bestPerRoute
+            }
+            .stateIn(
+                scope        = viewModelScope,
+                started      = SharingStarted.WhileSubscribed(5_000),
+                initialValue = emptyList()
+            )
+    init {
+        viewModelScope.launch {
+            filteredPairs.collect { list ->
+                Log.d(TAG, "filteredPairs (mejor por ruta): $list")
+            }
+        }
+    }
+
+    val detailsWithRuta: StateFlow<List<DetailWithRuta>> =
+        filteredPairs
+            .flatMapLatest { paresFiltrados ->
+                flow {
+                    // Para cada par, buscamos el nombre de la ruta de forma secuencial
+                    val listaConNombres = paresFiltrados.map { (a, b) ->
+                        // NOTE: suponemos que getRutaNombre es suspend y devuelve el String de inmediato
+                        val nombre = repo.getRutaNombre(a.idRuta)
+                        DetailWithRuta(
+                            detalleA = a,
+                            detalleB = b,
+                            nombreRuta = nombre
+                        )
+                    }
+                    emit(listaConNombres)
+                }
+            }
+            .stateIn(
+                scope        = viewModelScope,
+                started      = SharingStarted.WhileSubscribed(5_000),
+                initialValue = emptyList()
+            )
+    init {
+        viewModelScope.launch {
+            // Solo para debug: ver los tripletes con nombre en Logcat
+            detailsWithRuta.collect { lista ->
+                Log.d(TAG, "detailsWithRuta: $lista")
+            }
+        }
+    }
 }
+
+data class DetailWithRuta(
+    val detalleA: ParadaRutaDetail,
+    val detalleB: ParadaRutaDetail,
+    val nombreRuta: String
+)
 
