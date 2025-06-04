@@ -10,21 +10,20 @@ import com.tonygnk.maplibredemo.repository.RutaRepository
 import com.tonygnk.maplibredemo.ui.rutasPuma.RutaPumaViewModel.Companion.TIMEOUT_MILLIS
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
-class RutaPumaParadaViewModel(
+class LiveBusViewModel(
     rutaRepository: RutaRepository,
     paradaRepository: ParadaRepository,
     paradaRutaRepository: ParadaRutaRepository,
     savedStateHandle: SavedStateHandle
 ): ViewModel() {
-    private val rutaId: Int = checkNotNull(savedStateHandle[RutaPumaDestination.rutaIdArg])
-    private val paradaId: Int = checkNotNull(savedStateHandle[RutaPumaParadaDestination.paradaIdArg])
+    private val rutaId: Int = checkNotNull(savedStateHandle[RutaDetailDestination.rutaIdArg])
+    private val paradaId: Int = checkNotNull(savedStateHandle[RutaDetailDestination.rutaIdArg])
 
     val puntosRuta: StateFlow<PuntosRuta> = rutaRepository.getRutaPoints(rutaId).map { PuntosRuta(it) }
         .stateIn(

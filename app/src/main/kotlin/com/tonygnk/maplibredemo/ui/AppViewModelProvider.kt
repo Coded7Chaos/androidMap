@@ -4,7 +4,6 @@ import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import androidx.savedstate.savedState
 import com.tonygnk.maplibredemo.MapApplication
 import com.tonygnk.maplibredemo.ui.favoritos.FavoritosViewModel
 import com.tonygnk.maplibredemo.ui.home.HomeViewModel
@@ -13,9 +12,7 @@ import com.tonygnk.maplibredemo.ui.map.RouteDetailViewModel
 import com.tonygnk.maplibredemo.ui.map.RouteSearchViewModel
 import com.tonygnk.maplibredemo.ui.parada.ParadaEntryViewModel
 import com.tonygnk.maplibredemo.ui.perfil.PerfilViewModel
-import com.tonygnk.maplibredemo.ui.rutasPuma.ParadasPumaListScreen
-import com.tonygnk.maplibredemo.ui.rutasPuma.ParadasPumaListViewModel
-import com.tonygnk.maplibredemo.ui.rutasPuma.RutaPumaParadaViewModel
+import com.tonygnk.maplibredemo.ui.rutasPuma.LiveBusViewModel
 import com.tonygnk.maplibredemo.ui.rutasPuma.RutaPumaViewModel
 import com.tonygnk.maplibredemo.ui.rutasPuma.RutasPumaListViewModel
 import com.tonygnk.maplibredemo.ui.usuario.UserViewModel
@@ -41,7 +38,7 @@ object AppViewModelProvider {
             FavoritosViewModel()
         }
         initializer {
-            RutaPumaParadaViewModel(
+            LiveBusViewModel(
                 mapApplication().container.rutaRepository,
                 mapApplication().container.paradaRepository,
                 mapApplication().container.paradaRutaRepository,
@@ -51,13 +48,7 @@ object AppViewModelProvider {
         initializer {
             RutasPumaListViewModel(mapApplication().container.rutaRepository)
         }
-        initializer {
-            ParadasPumaListViewModel(
-                mapApplication().container.paradaRepository,
-                mapApplication().container.paradaRutaRepository,
-                savedStateHandle = createSavedStateHandle()
-            )
-        }
+
         initializer {
             RutaPumaViewModel(
                 mapApplication().container.rutaRepository,

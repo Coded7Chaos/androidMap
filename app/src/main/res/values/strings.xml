@@ -23,4 +23,5 @@
     <string name="route_loading_title">Buscando rutas...</string>
     <string name="route_results_title">Resultados</string>
     <string name="route_detail_title">Detalle de ruta</string>
+    <string name="paradas_list_title">Lista de paradas de una ruta</string>
 </resources>

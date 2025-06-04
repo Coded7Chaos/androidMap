@@ -34,7 +34,7 @@ import com.tonygnk.maplibredemo.models.Ruta
 import com.tonygnk.maplibredemo.ui.AppViewModelProvider
 import com.tonygnk.maplibredemo.ui.navigation.NavigationDestination
 
-object RutasPumaDestination : NavigationDestination {
+object RutasListDestination : NavigationDestination {
     override val route = "rutas_puma"
     override val titleRes = R.string.rutas_puma_title
 }
@@ -42,7 +42,7 @@ object RutasPumaDestination : NavigationDestination {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RutasPumaListScreen(
+fun RutasListScreen(
     navigateToFavoritos: () -> Unit,
     navigateToProfile: () -> Unit,
     navigateToRutasPuma: () -> Unit,

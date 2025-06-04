@@ -2,6 +2,7 @@ package com.tonygnk.maplibredemo.ui.navigation
 
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.navigation.compose.NavHost
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -26,17 +27,16 @@ import com.tonygnk.maplibredemo.ui.map.RouteResultsScreen
 import com.tonygnk.maplibredemo.ui.map.RouteSearchViewModel
 import com.tonygnk.maplibredemo.ui.parada.ParadaEntryDestination
 import com.tonygnk.maplibredemo.ui.parada.ParadaEntryScreen
+import com.tonygnk.maplibredemo.ui.perfil.PerfilDestination
 import com.tonygnk.maplibredemo.ui.perfil.PerfilScreen
-import com.tonygnk.maplibredemo.ui.perfil.ProfileDestination
-import com.tonygnk.maplibredemo.ui.rutasPuma.ParadasPumaDestination
-import com.tonygnk.maplibredemo.ui.rutasPuma.ParadasPumaListScreen
-import com.tonygnk.maplibredemo.ui.rutasPuma.RutaPumaDestination
-import com.tonygnk.maplibredemo.ui.rutasPuma.RutaPumaDestination.rutaNombre
-import com.tonygnk.maplibredemo.ui.rutasPuma.RutaPumaParadaDestination
-import com.tonygnk.maplibredemo.ui.rutasPuma.RutaPumaParadaScreen
-import com.tonygnk.maplibredemo.ui.rutasPuma.RutaPumaScreen
-import com.tonygnk.maplibredemo.ui.rutasPuma.RutasPumaDestination
-import com.tonygnk.maplibredemo.ui.rutasPuma.RutasPumaListScreen
+import com.tonygnk.maplibredemo.ui.rutasPuma.ParadasListDestination
+import com.tonygnk.maplibredemo.ui.rutasPuma.ParadasListScreen
+import com.tonygnk.maplibredemo.ui.rutasPuma.RutaDetailDestination
+import com.tonygnk.maplibredemo.ui.rutasPuma.RutaDetailScreen
+import com.tonygnk.maplibredemo.ui.rutasPuma.RutaPumaViewModel
+import com.tonygnk.maplibredemo.ui.rutasPuma.RutasListDestination
+import com.tonygnk.maplibredemo.ui.rutasPuma.RutasListScreen
+import androidx.navigation.compose.navigation
 import com.tonygnk.maplibredemo.ui.usuario.UserDestination
 import com.tonygnk.maplibredemo.ui.usuario.UserScreen
 
@@ -50,153 +50,124 @@ fun MapNavHost(
 
     NavHost(
         navController = navController,
-        startDestination = MapDestination.route,
+        startDestination = MapDestination.route, //MapDestination.route,
         modifier = modifier
     ){
-        composable(route = HomeDestination.route){
-            HomeScreen(
-                navigateToParadaEntry = { navController.navigate(ParadaEntryDestination.route) },
-                navigateToUserScreen = { navController.navigate(UserDestination.route) }
-            )
-        }
-        composable(route = ParadaEntryDestination.route) {
-            ParadaEntryScreen(
-                navigateBack = { navController.popBackStack() },
-                onNavigateUp = { navController.navigateUp() }
-            )
-        }
-
-        composable(route = UserDestination.route) {
-            UserScreen(
-                navigateBack = { navController.popBackStack() },
-                onNavigateUp = { navController.navigateUp() }
-            )
-        }
 
         composable(route = MapDestination.route) {
             MapScreen(
-                navigateToRutasPuma = { navController.navigate(RutasPumaDestination.route) },
-                navigateToProfile = { navController.navigate(ProfileDestination.route) },
+                navigateToRutasPuma = { navController.navigate(RutasListDestination.route) },
+                navigateToProfile = { navController.navigate(PerfilDestination.route) },
                 navigateToFavoritos = { navController.navigate(FavoritosDestination.route) },
                 navigateToMap = { navController.navigate(MapDestination.route) },
-                navigateToLoader = { navController.navigate(RouteResultsDestination.route) },
-
+                navigateToLoader = { navController.navigate(RouteLoadingDestination.route) },
                 )
         }
+
         composable(route = FavoritosDestination.route) {
             FavoritosScreen(
-                navigateToRutasPuma = { navController.navigate(RutasPumaDestination.route) },
-                navigateToProfile = { navController.navigate(ProfileDestination.route) },
+                navigateToRutasPuma = { navController.navigate(RutasListDestination.route) },
+                navigateToProfile = { navController.navigate(PerfilDestination.route) },
                 navigateToFavoritos = { navController.navigate(FavoritosDestination.route) },
                 navigateToMap = { navController.navigate(MapDestination.route) }
             )
         }
 
-        composable(route = RutasPumaDestination.route) {
-            RutasPumaListScreen(
-                navigateToRutasPuma = { navController.navigate(RutasPumaDestination.route) },
-                navigateToProfile = { navController.navigate(ProfileDestination.route) },
+
+        //Lista de rutas del pumakatari
+        composable(route = RutasListDestination.route) {
+            RutasListScreen(
+                navigateToRutasPuma = { navController.navigate(RutasListDestination.route) },
+                navigateToProfile = { navController.navigate(PerfilDestination.route) },
                 navigateToFavoritos = { navController.navigate(FavoritosDestination.route) },
                 navigateToMap = { navController.navigate(MapDestination.route) },
                 navigateToRuta = { rutaIdArg, rutaNombre ->
-                    navController.navigate("${RutaPumaDestination.route}/$rutaIdArg/$rutaNombre")
+                    navController.navigate("${RutaDetailDestination.route}/$rutaIdArg/$rutaNombre")
                 }
             )
         }
-        composable(route = ProfileDestination.route) {
+        navigation(
+            startDestination = RutaDetailDestination.routeWithArgs,
+            route = "ruta_flow"
+        ){
+            //Vista de una sola ruta de puma, con la opcion de ver sus paradas
+            composable(route = RutaDetailDestination.routeWithArgs,
+                arguments = listOf(
+                    navArgument(RutaDetailDestination.rutaIdArg) { type = NavType.IntType },
+                    navArgument(RutaDetailDestination.rutaNombre) { type = NavType.StringType }
+                )
+            ) {
+                backStackEntry ->
+                val parentEntry = remember(backStackEntry) {
+                    navController.getBackStackEntry("ruta_flow")
+                }
+
+                val viewModel: RutaPumaViewModel = viewModel(
+                    parentEntry,
+                    factory = AppViewModelProvider.Factory
+                )
+
+                RutaDetailScreen(
+                    navigateBack = { navController.navigateUp() },
+                    navigateToParadasList = { navController.navigate(ParadasListDestination.route) },
+                    viewModel = viewModel
+                )
+            }
+
+            //Lista de paradas
+            composable(route = ParadasListDestination.route) {
+                backStackEntry ->
+                val parentEntry = remember(backStackEntry) {
+                    navController.getBackStackEntry("ruta_flow")
+                }
+                val viewModel: RutaPumaViewModel = viewModel(
+                    parentEntry,
+                    factory = AppViewModelProvider.Factory
+                )
+
+                ParadasListScreen(
+                    navigateBack = { navController.popBackStack() },
+                    navigateToParada = { navController.navigateUp() },
+                    modifier = modifier,
+                    viewModel = viewModel
+                )
+            }
+
+        }
+
+
+
+
+        composable(route = PerfilDestination.route) {
             PerfilScreen(
-                navigateToRutasPuma = { navController.navigate(RutasPumaDestination.route) },
-                navigateToProfile = { navController.navigate(ProfileDestination.route) },
+                navigateToRutasPuma = { navController.navigate(RutasListDestination.route) },
+                navigateToProfile = { navController.navigate(PerfilDestination.route) },
                 navigateToFavoritos = { navController.navigate(FavoritosDestination.route) },
                 navigateToMap = { navController.navigate(MapDestination.route) }
             )
         }
-        composable(
-            route = RutaPumaParadaDestination.routeWithArgs,
-            arguments = listOf(
-                navArgument(RutaPumaParadaDestination.rutaIdArg) { type = NavType.IntType },
-                navArgument(RutaPumaParadaDestination.paradaIdArg) { type = NavType.IntType }
-            )
-        ) {
-            RutaPumaParadaScreen(
-                navigateBack = { navController.navigateUp() }
-            )
-        }
-        composable(
-            route = ParadasPumaDestination.routeWithArgs,
-            arguments = listOf(
-                navArgument(ParadasPumaDestination.rutaIdArg) { type = NavType.IntType },
-            )
-        ) { backStackEntry ->
-            val rutaId = backStackEntry.arguments!!.getInt(RutaPumaDestination.rutaIdArg)
-            val paradaId = backStackEntry.arguments!!.getInt(RutaPumaParadaDestination.paradaIdArg)
-            ParadasPumaListScreen(
-                navigateBack = { navController.navigateUp() },
-                navigateToParada = {
 
-                    navController.navigateUp()
-                },
-                modifier = modifier
-            )
-        }
-        composable(route = RutaPumaDestination.routeWithArgs,
-                   arguments = listOf(
-                       navArgument(RutaPumaDestination.rutaIdArg) { type = NavType.IntType },
-                       navArgument(RutaPumaDestination.rutaNombre) { type = NavType.StringType }
-                   )
-            ) {backStackEntry ->
-                val rutaId = backStackEntry.arguments!!.getInt(RutaPumaDestination.rutaIdArg)
-                val rutaNombre = backStackEntry.arguments?.getString("rutaNombre")
-                RutaPumaScreen(
-                    titulo = rutaNombre ?: "Detalle de ruta",
-                    navigateBack = { navController.navigateUp() },
-                    navigateToParadaList = { navController.navigate("${ParadasPumaDestination.route}/${rutaId}") }
-                )
-        }
 
-        composable(RouteLoadingDestination.route) {
-            val vm: RouteSearchViewModel = viewModel(factory = AppViewModelProvider.Factory)
+
+
+
+        composable(route = RouteLoadingDestination.route) {
             RouteLoadingScreen(
-                viewModel       = vm,
                 onResultsReady  = {
-                    // Aquí haces el ruteo:
                     navController.navigate(RouteResultsDestination.route) {
-                        // Para que al volver no regreses al loader
                         popUpTo(RouteLoadingDestination.route) { inclusive = true }
                     }
                 }
             )
         }
-
+/*
         composable(RouteResultsDestination.route) {
-            val resultsVm: RouteSearchViewModel =
-                viewModel(factory = AppViewModelProvider.Factory)
             RouteResultsScreen(
-                viewModel    = resultsVm,
-                onItemClick  = { route ->
-                    navController.navigate(
-                        "${RouteDetailDestination.routeWithoutArgs}/${route.id_ruta_puma}"
-                    )
-                }
+
             )
         }
+*/
 
-
-        composable(
-            route     = RouteDetailDestination.routeWithArgs,
-            arguments = listOf(
-                navArgument(RouteDetailDestination.routeIdArg) {
-                    type = NavType.IntType
-                }
-            )
-        ) { backStack ->
-            val id = backStack.arguments!!.getInt(RouteDetailDestination.routeIdArg)
-            /*RouteDetailScreen(
-                viewModel   = detailVm,
-                routeId     = id,
-                navigateUp  = { navController.navigateUp() }
-            )*/
-        }
     }
 
     }

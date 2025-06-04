@@ -12,13 +12,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tonygnk.maplibredemo.MapTopAppBar
-import com.tonygnk.maplibredemo.PumaRutasMap
 import com.tonygnk.maplibredemo.R
 import com.tonygnk.maplibredemo.models.Parada
 import com.tonygnk.maplibredemo.ui.AppViewModelProvider
 import com.tonygnk.maplibredemo.ui.navigation.NavigationDestination
 
-object RutaPumaParadaDestination : NavigationDestination {
+object LiveBusDestination : NavigationDestination {
     override val route = "parada_puma"
     override val titleRes = R.string.ruta_puma_title
     const val rutaIdArg = "rutaId"
@@ -28,11 +27,11 @@ object RutaPumaParadaDestination : NavigationDestination {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RutaPumaParadaScreen(
+fun LiveBusScreen(
     titulo: String = "Parada",
     navigateBack: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: RutaPumaParadaViewModel = viewModel(factory = AppViewModelProvider.Factory)
+    viewModel: LiveBusViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ){
     val coordenadas by viewModel.puntosRuta.collectAsState()
     val paradas by viewModel.detalleParadas.collectAsState()
@@ -58,8 +57,6 @@ fun RutaPumaParadaScreen(
                 ),
             puntosRuta = coordenadas,
             paradas = paradas,
-            lat = parada.lat,
-            lon = parada.lon
         )
     }
 }
@@ -69,14 +66,6 @@ fun RutaPumaParadaBody(
     modifier: Modifier = Modifier,
     puntosRuta: PuntosRuta,
     paradas: List<Parada>,
-    lat: Double = 0.0,
-    lon: Double = 0.0
 ) {
-    PumaRutasMap(
-        modifier,
-        puntosList = puntosRuta.puntosList,
-        paradasList = paradas,
-        lat = lat,
-        long = lon
-    )
+
 }

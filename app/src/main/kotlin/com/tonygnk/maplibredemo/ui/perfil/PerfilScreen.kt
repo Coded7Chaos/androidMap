@@ -35,7 +35,7 @@ import com.tonygnk.maplibredemo.ui.navigation.NavigationDestination
 import java.nio.file.WatchEvent
 import com.tonygnk.maplibredemo.R.drawable.perfil1
 
-object ProfileDestination : NavigationDestination {
+object PerfilDestination : NavigationDestination {
     override val route = "perfil"
     override val titleRes = R.string.perfil_title
 }

@@ -1,5 +1,6 @@
 package com.tonygnk.maplibredemo.ui.rutasPuma
 
+import android.net.Uri
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.calculateEndPadding
@@ -12,39 +13,44 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Place
-import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tonygnk.maplibredemo.MapTopAppBar
 import com.tonygnk.maplibredemo.R
 import com.tonygnk.maplibredemo.ui.AppViewModelProvider
 import com.tonygnk.maplibredemo.ui.navigation.NavigationDestination
-import com.tonygnk.maplibredemo.ui.rutasPuma.RutaPumaDestination.rutaIdArg
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.tonygnk.maplibredemo.PumaRutasMap
+import com.tonygnk.maplibredemo.MapStyleManager
+import com.tonygnk.maplibredemo.models.Coordenada
 import com.tonygnk.maplibredemo.models.Parada
-import com.tonygnk.maplibredemo.PumaRutasMap
+import org.maplibre.android.geometry.LatLng
+import org.maplibre.android.maps.Style
+import org.ramani.compose.CameraPosition
+import org.ramani.compose.MapLibre
+import org.ramani.compose.Polyline
+import org.ramani.compose.Symbol
 
-object RutaPumaDestination : NavigationDestination {
-    override val route = "ruta_puma"
+object RutaDetailDestination : NavigationDestination {
+    override val route = "ruta_flow/ruta_puma"
     override val titleRes = R.string.ruta_puma_title
     const val rutaIdArg = "rutaId"
     const val rutaNombre = "rutaNombre"
@@ -54,16 +60,17 @@ object RutaPumaDestination : NavigationDestination {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RutaPumaScreen(
+fun RutaDetailScreen(
     titulo: String = "Vista de ruta",
     navigateBack: () -> Unit,
-    navigateToParadaList: () -> Unit,
-    modifier: Modifier = Modifier,
-    viewModel: RutaPumaViewModel = viewModel(factory = AppViewModelProvider.Factory)
+    navigateToParadasList: () -> Unit,
+    viewModel: RutaPumaViewModel,
+    modifier: Modifier = Modifier
 ){
     val coordenadas by viewModel.puntosRuta.collectAsState()
     val paradas by viewModel.detalleParadas.collectAsState()
-
+    val rutaId = viewModel.rutaId
+    val cameraPosition by viewModel.cameraPositionState
     Scaffold(
         topBar = {
             MapTopAppBar(
@@ -87,7 +94,7 @@ fun RutaPumaScreen(
 
                     // botón de "Paradas"
                     Button(
-                        onClick = navigateToParadaList,
+                        onClick ={ navigateToParadasList() },
                         shape = RoundedCornerShape(50),
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF0F0F0)),
                         modifier = Modifier
@@ -108,7 +115,7 @@ fun RutaPumaScreen(
         },
         modifier = modifier
     ) { innerPadding ->
-        RutaPumaBody(
+        RutaDetailBody(
             modifier = Modifier
                 .padding(
                     start = innerPadding.calculateStartPadding(LocalLayoutDirection.current),
@@ -116,20 +123,84 @@ fun RutaPumaScreen(
                     top = innerPadding.calculateTopPadding()
                 ),
             puntosRuta = coordenadas,
-            paradas = paradas
+            paradas = paradas,
+            cameraPosition = cameraPosition
         )
     }
 }
 
 @Composable
-fun RutaPumaBody(
+fun RutaDetailBody(
     modifier: Modifier = Modifier,
     puntosRuta: PuntosRuta,
-    paradas: List<Parada>
+    paradas: List<Parada>,
+    cameraPosition: CameraPosition
 ) {
     PumaRutasMap(
-        modifier,
         puntosList = puntosRuta.puntosList,
-        paradasList = paradas
+        paradasList = paradas,
+        cameraPosition = cameraPosition
     )
 }
+
+
+@Composable
+fun PumaRutasMap(
+    cameraPosition: CameraPosition,
+    modifier: Modifier = Modifier,
+    puntosList: List<Coordenada> = listOf(),
+    paradasList: List<Parada> = listOf()
+) {
+    val context = LocalContext.current
+
+    val styleBuilder = remember {
+        val styleManager = MapStyleManager(context)
+        val style = when (val result = styleManager.setupStyle()) {
+            is MapStyleManager.StyleSetupResult.Error -> {
+                throw result.exception
+            }
+
+            is MapStyleManager.StyleSetupResult.Success -> result.styleFile
+        }
+        Style.Builder().fromUri(
+            Uri.fromFile(style).toString()
+        )
+    }
+
+    MapLibre(
+        modifier = modifier,
+        styleBuilder = styleBuilder,
+        cameraPosition = cameraPosition,
+    ) {
+        // Add map markers, polylines, etc.
+        var point = LatLng(-16.5, -68.15)
+        Symbol(point, 0.5f, "red", false)
+        fun List<Coordenada>.toLatLngList(): List<LatLng> {
+            return this.map { coordenada ->
+                LatLng(coordenada.lat, coordenada.lon)
+            }
+        }
+
+        fun List<Parada>.toLatLngList(): List<LatLng> {
+            return this.map { parada ->
+                LatLng(parada.lat, parada.lon)
+            }
+        }
+
+
+        val puntos = puntosList.toLatLngList()
+        Polyline(puntos, color = "Red", lineWidth = 5.0f)
+
+        paradasList.forEach { parada ->
+            Symbol(
+                center = LatLng(parada.lat, parada.lon),
+                imageId = R.drawable.parada_bus,
+                color = "black",
+                isDraggable = false,
+                size = 0.03f
+            )
+        }
+
+    }
+}
+

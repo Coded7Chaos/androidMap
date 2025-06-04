@@ -3,7 +3,6 @@ package com.tonygnk.maplibredemo.ui.rutasPuma
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -32,37 +31,38 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.tonygnk.maplibredemo.BottomNavBar
 import com.tonygnk.maplibredemo.MapTopAppBar
 import com.tonygnk.maplibredemo.R
 import com.tonygnk.maplibredemo.models.Parada
-import com.tonygnk.maplibredemo.models.Ruta
-import com.tonygnk.maplibredemo.ui.AppViewModelProvider
 import com.tonygnk.maplibredemo.ui.navigation.NavigationDestination
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.lifecycle.viewmodel.compose.viewModel
+import org.maplibre.android.geometry.LatLng
+import org.ramani.compose.CameraPosition
 
-object ParadasPumaDestination : NavigationDestination {
-    override val route = "paradaspuma"
-    override val titleRes = R.string.fav_title
-    const val rutaIdArg = "rutaId"
-    val routeWithArgs = "${ParadasPumaDestination.route}/{$rutaIdArg}"
+
+object ParadasListDestination : NavigationDestination {
+    override val route = "paradasPorRuta"
+    override val titleRes = R.string.paradas_list_title
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ParadasPumaListScreen(
+fun ParadasListScreen(
     navigateBack: () -> Unit,
     navigateToParada: () -> Unit,
     modifier: Modifier,
-    viewModel: ParadasPumaListViewModel = viewModel(factory = AppViewModelProvider.Factory)
+    viewModel: RutaPumaViewModel
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
-    val paradaUiState by viewModel.detalleParadas.collectAsState()
+    val paradas by viewModel.detalleParadas.collectAsState()
+    val rutaNombre = viewModel.rutaNombre
+
 
     Scaffold(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -70,6 +70,7 @@ fun ParadasPumaListScreen(
             MapTopAppBar(
                 title = "Paradas",
                 canNavigateBack = true,
+                scrollBehavior = scrollBehavior,
                 navigateUp = navigateBack
             )
         },
@@ -86,7 +87,7 @@ fun ParadasPumaListScreen(
                     .fillMaxWidth()
             ) {
                 Text(
-                    text = "ACHUMANI A SAN PEDRO", // aquí pon tu variable de ruta dinámicamente
+                    text = rutaNombre,
                     style = MaterialTheme.typography.titleMedium,
                     color = Color.White,
                     textAlign = TextAlign.Center,
@@ -115,22 +116,36 @@ fun ParadasPumaListScreen(
                     .background(Color.White),
                 contentPadding = PaddingValues(0.dp)    // ② lista sin padding extra arriba
             ) {
-                items(paradaUiState, key = { it.id_parada }) { parada ->
-                    ParadaItem(parada = parada, onClick = { navigateToParada() })
+                items(paradas, key = { it.id_parada }) { parada ->
+                    ParadaItem(
+                        parada = parada,
+                        viewModel = viewModel,
+                        navigateBack = navigateBack
+                    )
                 }
             }
         }
     }
 }
+
 @Composable
 fun ParadaItem(
     parada: Parada,
-    onClick: () -> Unit
+    viewModel: RutaPumaViewModel,
+    navigateBack: () -> Unit,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .clickable(onClick = {
+                viewModel.updateCameraPosition(
+                    CameraPosition(
+                        target = LatLng(parada.lat, parada.lon),
+                        zoom = 15.0
+                    )
+                )
+                navigateBack()
+            })
             .padding(horizontal = 16.dp, vertical = 8.dp)
             .padding(top = 2.dp),
         verticalAlignment = Alignment.CenterVertically
