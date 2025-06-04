@@ -1,5 +1,6 @@
 package com.tonygnk.maplibredemo.ui.map
 
+import androidx.compose.foundation.background
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.Navigation
@@ -15,8 +16,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
-
-
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 
 object RouteLoadingDestination : NavigationDestination {
@@ -26,21 +29,75 @@ object RouteLoadingDestination : NavigationDestination {
 
 @Composable
 fun RouteLoadingScreen(
-    viewModel: RouteSearchViewModel = viewModel (factory = AppViewModelProvider.Factory),
-    onResultsReady: (List<Ruta>) -> Unit
-){
-    val details by viewModel.detailPairs.collectAsState()
+    viewModel: RouteSearchViewModel,
+    onResultsReady: () -> Unit
+) {
+    val detailPairs by viewModel.detailPairs.collectAsStateWithLifecycle()
+    var loadingMessage by remember { mutableStateOf("Buscando rutas disponibles...") }
+    var showError by remember { mutableStateOf(false) }
 
-    LaunchedEffect(details) {
-        if (details.isNotEmpty()) {
-            //onResultsReady()
+    LaunchedEffect(detailPairs) {
+        when {
+            detailPairs.isNotEmpty() -> {
+                onResultsReady()
+            }
+
+            detailPairs.isEmpty() && viewModel.routeCandidates.value.isNotEmpty() -> {
+                // Caso especial: candidatos pero no pares detallados
+                loadingMessage = "Analizando rutas encontradas..."
+            }
         }
     }
 
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        CircularProgressIndicator()
-        Spacer(Modifier.height(8.dp))
-        Text("Buscando rutas…")
+    LaunchedEffect(Unit) {
+        viewModel.viewModelScope.launch {
+            // Esperar un tiempo razonable para la búsqueda
+            delay(15000) // 15 segundos
+
+            if (detailPairs.isEmpty()) {
+                showError = true
+                loadingMessage = "No se encontraron rutas disponibles"
+            }
+        }
+    }
+
+
+    Box(
+        modifier = Modifier.fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(64.dp),
+                color = MaterialTheme.colorScheme.primary,
+                strokeWidth = 6.dp
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(
+                text = loadingMessage,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            if (showError) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(
+                    onClick = { /* Lógica para reintentar o volver atrás */ },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer
+                    )
+                ) {
+                    Text("Reintentar búsqueda")
+                }
+            }
+
+        }
+
     }
 }
+
 

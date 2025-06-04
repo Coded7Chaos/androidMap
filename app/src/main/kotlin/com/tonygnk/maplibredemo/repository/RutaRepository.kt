@@ -16,4 +16,6 @@ interface RutaRepository {
     suspend fun updateRuta(ruta: Ruta)
 
     fun getRutaPoints(id_ruta_puma: Int): Flow<List<Coordenada>>
+
+    fun getCoordenadasRuta(inicio: Coordenada, fin: Coordenada): Flow<List<Coordenada>>
 }

@@ -126,6 +126,7 @@ class ParadasFunctions(
             }
         }
         relaciones
+            .distinctBy { it.rutaId }
     }
 }
 

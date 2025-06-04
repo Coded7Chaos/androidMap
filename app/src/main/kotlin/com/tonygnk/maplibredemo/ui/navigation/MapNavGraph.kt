@@ -37,8 +37,10 @@ import com.tonygnk.maplibredemo.ui.rutasPuma.RutaPumaViewModel
 import com.tonygnk.maplibredemo.ui.rutasPuma.RutasListDestination
 import com.tonygnk.maplibredemo.ui.rutasPuma.RutasListScreen
 import androidx.navigation.compose.navigation
+import com.tonygnk.maplibredemo.ui.map.RouteDetailScreen
 import com.tonygnk.maplibredemo.ui.usuario.UserDestination
 import com.tonygnk.maplibredemo.ui.usuario.UserScreen
+import org.maplibre.android.geometry.LatLng
 
 
 @Composable
@@ -50,19 +52,11 @@ fun MapNavHost(
 
     NavHost(
         navController = navController,
-        startDestination = MapDestination.route, //MapDestination.route,
+        startDestination = "rf",
         modifier = modifier
     ){
 
-        composable(route = MapDestination.route) {
-            MapScreen(
-                navigateToRutasPuma = { navController.navigate(RutasListDestination.route) },
-                navigateToProfile = { navController.navigate(PerfilDestination.route) },
-                navigateToFavoritos = { navController.navigate(FavoritosDestination.route) },
-                navigateToMap = { navController.navigate(MapDestination.route) },
-                navigateToLoader = { navController.navigate(RouteLoadingDestination.route) },
-                )
-        }
+
 
         composable(route = FavoritosDestination.route) {
             FavoritosScreen(
@@ -86,6 +80,8 @@ fun MapNavHost(
                 }
             )
         }
+
+
         navigation(
             startDestination = RutaDetailDestination.routeWithArgs,
             route = "ruta_flow"
@@ -150,23 +146,78 @@ fun MapNavHost(
 
 
 
-
-        composable(route = RouteLoadingDestination.route) {
-            RouteLoadingScreen(
-                onResultsReady  = {
-                    navController.navigate(RouteResultsDestination.route) {
-                        popUpTo(RouteLoadingDestination.route) { inclusive = true }
-                    }
+        navigation(
+            startDestination = MapDestination.route,
+            route = "rf"
+        ) {
+            composable(route = MapDestination.route) {
+                    backStackEntry ->
+                val parentEntry = remember(backStackEntry) {
+                    navController.getBackStackEntry("rf")
                 }
-            )
-        }
-/*
-        composable(RouteResultsDestination.route) {
-            RouteResultsScreen(
 
+                val viewModel: RouteSearchViewModel = viewModel(
+                    parentEntry,
+                    factory = AppViewModelProvider.Factory
+                )
+                MapScreen(
+                    navigateToRutasPuma = { navController.navigate(RutasListDestination.route) },
+                    navigateToProfile = { navController.navigate(PerfilDestination.route) },
+                    navigateToFavoritos = { navController.navigate(FavoritosDestination.route) },
+                    navigateToMap = { navController.navigate(MapDestination.route) },
+                    navigateToLoader = { navController.navigate(RouteLoadingDestination.route) },
+                    routeSearchViewModel = viewModel
+                )
+            }
+            composable(route = RouteLoadingDestination.route) {
+                    backStackEntry ->
+                val parentEntry = remember(backStackEntry) {
+                    navController.getBackStackEntry("rf")
+                }
+
+                val viewModel: RouteSearchViewModel = viewModel(
+                    parentEntry,
+                    factory = AppViewModelProvider.Factory
+                )
+                RouteLoadingScreen(
+                    onResultsReady = { navController.navigate(RouteResultsDestination.route) },
+                    viewModel = viewModel
+                )
+            }
+
+            composable(RouteResultsDestination.route) {
+                    backStackEntry ->
+                val parentEntry = remember(backStackEntry) {
+                    navController.getBackStackEntry("rf")
+                }
+
+                val viewModel: RouteSearchViewModel = viewModel(
+                    parentEntry,
+                    factory = AppViewModelProvider.Factory
+                )
+                RouteResultsScreen(
+                    viewModel = viewModel,
+                    onItemClick = { navController.navigate(RouteDetailDestination.route)
+                    }
+                )
+            }
+
+            composable(RouteDetailDestination.route)
+            { backStackEntry ->
+            val parentEntry = remember(backStackEntry) {
+                navController.getBackStackEntry("rf")
+            }
+
+            val viewModel: RouteSearchViewModel = viewModel(
+                parentEntry,
+                factory = AppViewModelProvider.Factory
+            )
+            RouteDetailScreen(
+                viewModel = viewModel,
+                navigateBack = { navController.popBackStack() }
             )
         }
-*/
+        }
 
     }
 

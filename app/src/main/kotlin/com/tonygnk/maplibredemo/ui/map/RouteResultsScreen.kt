@@ -52,6 +52,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tonygnk.maplibredemo.repository.ParadaRutaDetail
 import org.maplibre.android.geometry.LatLng
 
@@ -64,43 +65,37 @@ object RouteResultsDestination : NavigationDestination {
 @Composable
 fun RouteResultsScreen(
     viewModel: RouteSearchViewModel,
-    onItemClick: (Ruta) -> Unit
-){// 1) Origen y destino en tu UI; pon aquí tu lógica de MapLibre o selección de puntos:
-    var userOrigin by remember { mutableStateOf<LatLng?>(null) }
-    var userDest   by remember { mutableStateOf<LatLng?>(null) }
+    onItemClick: () -> Unit
+){
 
-    // 2) Cuando ambos estén disponibles, avisamos al VM:
-    LaunchedEffect(userOrigin, userDest) {
-        if (userOrigin != null && userDest != null) {
-            viewModel.setPoints(userOrigin!!, userDest!!)
-        }
-    }
-
-    // 3) Coleccionamos los flujos del VM
-    val candidates by viewModel.routeCandidates.collectAsState()
-    val details    by viewModel.detailPairs.collectAsState()
+    val details by viewModel.detailPairs.collectAsStateWithLifecycle()
+    val listaDeRutas by viewModel.rutasEncontradas.collectAsState(initial = emptyList())
 
     Column(Modifier.fillMaxSize().padding(16.dp)) {
         Text("Resultados de la búsqueda", style = MaterialTheme.typography.titleMedium)
         Spacer(Modifier.height(8.dp))
 
-        if (candidates.isEmpty()) {
+        if (details.isEmpty()) {
             Text("No se encontraron rutas", style = MaterialTheme.typography.bodyMedium)
         } else {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(candidates) { cand ->
+                items(details) { detail ->
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
+                                viewModel.selectPair(detail)
+                                onItemClick()
                             },
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                     ) {
                         Column(Modifier.padding(12.dp)) {
-                            Text("Ruta: ${cand.paradaA.nombre}", style = MaterialTheme.typography.bodyLarge)
-                            Text("Parada origen: ${cand.paradaA.nombre}",
+                            val ruta = listaDeRutas.firstOrNull { it.id_ruta_puma == detail.first.idRuta }
+                            Text("Ruta Pumakatari: ${ruta?.nombre}", style = MaterialTheme.typography.bodyLarge)
+                            Text("Parada origen: ${detail.first.nombre}",
                                 style = MaterialTheme.typography.bodyMedium)
-                            Text("Parada destino: ${cand.paradaB.nombre}",
+                            Text("Parada destino: ${detail.second.nombre}",
                                 style = MaterialTheme.typography.bodyMedium)
                         }
                     }
@@ -109,16 +104,5 @@ fun RouteResultsScreen(
         }
 
         Spacer(Modifier.height(16.dp))
-        Text("Pares detallados", style = MaterialTheme.typography.titleSmall)
-        LazyColumn {
-            items(details) { (o, d) ->
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(o.nombre, style = MaterialTheme.typography.bodySmall)
-                    Text("→", style = MaterialTheme.typography.bodySmall)
-                    Text(d.nombre, style = MaterialTheme.typography.bodySmall)
-                }
-                Divider()
-            }
-        }
     }
 }

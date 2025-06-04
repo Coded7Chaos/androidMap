@@ -95,7 +95,7 @@ import kotlin.coroutines.resumeWithException
 
 @OptIn(ExperimentalMaterial3Api::class)
 object MapDestination {
-    const val route = "main_map"
+    const val route = "rf/main_map"
     val titleRes = R.string.map_title
 }
 
@@ -142,7 +142,7 @@ fun MapScreen(
     navigateToMap: () -> Unit,
     navigateToLoader: () -> Unit,
     modifier: Modifier = Modifier,
-    routeSearchViewModel: RouteSearchViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    routeSearchViewModel: RouteSearchViewModel,
     viewModel: MapViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val context = LocalContext.current
