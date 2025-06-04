@@ -202,21 +202,21 @@ fun MapNavHost(
                 )
             }
 
-            composable(RouteDetailDestination.route)
-            { backStackEntry ->
-            val parentEntry = remember(backStackEntry) {
-                navController.getBackStackEntry("rf")
-            }
-
-            val viewModel: RouteSearchViewModel = viewModel(
-                parentEntry,
-                factory = AppViewModelProvider.Factory
-            )
-            RouteDetailScreen(
-                viewModel = viewModel,
-                navigateBack = { navController.popBackStack() }
-            )
-        }
+//            composable(RouteDetailDestination.route)
+//            { backStackEntry ->
+//            val parentEntry = remember(backStackEntry) {
+//                navController.getBackStackEntry("rf")
+//            }
+//
+//            val viewModel: RouteSearchViewModel = viewModel(
+//                parentEntry,
+//                factory = AppViewModelProvider.Factory
+//            )
+//            RouteDetailScreen(
+//                viewModel = viewModel,
+//                navigateBack = { navController.popBackStack() }
+//            )
+//        }
         }
 
     }

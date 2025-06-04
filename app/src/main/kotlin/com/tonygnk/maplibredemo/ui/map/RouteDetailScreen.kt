@@ -47,7 +47,7 @@ object RouteDetailDestination : NavigationDestination {
 fun RouteDetailScreen(
     viewModel: RouteSearchViewModel,
     navigateBack:() -> Unit,
-    ){
+    ){}/*
     val coordA by viewModel.coordenadaA.collectAsState(initial = null)
     val coordB by viewModel.coordenadaB.collectAsState(initial = null)
     val listaCoordenadas by viewModel.rutaCoordenadas.collectAsState(initial = emptyList())
@@ -116,3 +116,4 @@ fun Mapa(
 
     }
 
+*/

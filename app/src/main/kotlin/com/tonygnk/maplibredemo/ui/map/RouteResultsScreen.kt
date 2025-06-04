@@ -68,34 +68,54 @@ fun RouteResultsScreen(
     onItemClick: () -> Unit
 ){
 
+    var userOrigin by remember { mutableStateOf<LatLng?>(null) }
+    var userDest by remember { mutableStateOf<LatLng?>(null) }
+
+    LaunchedEffect(userOrigin, userDest) {
+        if(userOrigin != null && userDest != null){
+            viewModel.setPoints(userOrigin!!, userDest!!)
+        }
+    }
+
+    val candidates by viewModel.routeCandidates.collectAsStateWithLifecycle()
     val details by viewModel.detailPairs.collectAsStateWithLifecycle()
-    val listaDeRutas by viewModel.rutasEncontradas.collectAsState(initial = emptyList())
 
     Column(Modifier.fillMaxSize().padding(16.dp)) {
+
+        Text("Pares detallados", style = MaterialTheme.typography.titleSmall)
+        LazyColumn {
+            items(details) { (o, d) ->
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(o.nombre, style = MaterialTheme.typography.bodySmall)
+                    Text("→", style = MaterialTheme.typography.bodySmall)
+                    Text(d.nombre, style = MaterialTheme.typography.bodySmall)
+                }
+                Divider()
+            }
+        }
+
+
         Text("Resultados de la búsqueda", style = MaterialTheme.typography.titleMedium)
         Spacer(Modifier.height(8.dp))
 
-        if (details.isEmpty()) {
+        if (candidates.isEmpty()) {
             Text("No se encontraron rutas", style = MaterialTheme.typography.bodyMedium)
         } else {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(details) { detail ->
+                items(candidates) { cand ->
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                viewModel.selectPair(detail)
-                                onItemClick()
                             },
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                     ) {
                         Column(Modifier.padding(12.dp)) {
-                            val ruta = listaDeRutas.firstOrNull { it.id_ruta_puma == detail.first.idRuta }
-                            Text("Ruta Pumakatari: ${ruta?.nombre}", style = MaterialTheme.typography.bodyLarge)
-                            Text("Parada origen: ${detail.first.nombre}",
+                            Text("Ruta: ${cand.paradaA.nombre}", style = MaterialTheme.typography.bodyLarge)
+                            Text("Parada origen: ${cand.paradaA.nombre}",
                                 style = MaterialTheme.typography.bodyMedium)
-                            Text("Parada destino: ${detail.second.nombre}",
+                            Text("Parada destino: ${cand.paradaB.nombre}",
                                 style = MaterialTheme.typography.bodyMedium)
                         }
                     }
@@ -104,5 +124,6 @@ fun RouteResultsScreen(
         }
 
         Spacer(Modifier.height(16.dp))
+
     }
 }
