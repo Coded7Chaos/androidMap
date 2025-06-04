@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import org.maplibre.android.geometry.LatLng
 import org.ramani.compose.CameraPosition
 
@@ -36,6 +37,8 @@ class RutaPumaViewModel(
     fun updateCameraPosition(position: CameraPosition){
         cameraPositionState.value = position
     }
+
+
 
     val rutaId: Int = checkNotNull(savedStateHandle[RutaDetailDestination.rutaIdArg])
     val rutaNombre: String = checkNotNull(savedStateHandle[RutaDetailDestination.rutaNombre])
@@ -80,7 +83,21 @@ class RutaPumaViewModel(
     {
         const val TIMEOUT_MILLIS = 5_000L
     }
-
+    init{
+        viewModelScope.launch {
+            detalleParadas.collect{ paradas ->
+                if(paradas.isNotEmpty()){
+                    val primeraParada = paradas.first()
+                    updateCameraPosition(
+                        CameraPosition(
+                            target = LatLng(primeraParada.lat, primeraParada.lon),
+                            zoom = 14.0
+                        )
+                    )
+                }
+            }
+        }
+    }
 }
 
 data class PuntosRuta(val puntosList: List<Coordenada> = listOf())
