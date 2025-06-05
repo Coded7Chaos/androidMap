@@ -33,8 +33,8 @@ interface RutaDao {
             "FROM paradaruta pr\n" +
             "JOIN paradas p ON pr.id_parada = p.id_parada\n" +
             "WHERE pr.id_parada = p.id_parada\n" +
-            "AND pr.id_ruta = 1\n" +
-            "AND p.estado=:id_ruta_puma \n" +
+            "AND pr.id_ruta =:id_ruta_puma\n" +
+            "AND p.estado= 1\n" +
             "ORDER BY pr.orden")
     fun getParadasConOrden(id_ruta_puma: Int): Flow<List<ParadaRutaCoordenada>>
 

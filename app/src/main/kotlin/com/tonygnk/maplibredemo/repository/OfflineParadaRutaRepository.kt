@@ -11,6 +11,7 @@ class OfflineParadaRutaRepository(
     override fun getIdRutaStream(id_parada: Int): Flow<List<Int>> = paradaRutaDao.getIdRuta(id_parada)
 
     override fun getParadas(id_ruta: Int): Flow<List<Int>> = paradaRutaDao.getParadas((id_ruta))
+
     override fun getParadaRutaInfo(
         id_parada: Int,
         id_ruta: Int
