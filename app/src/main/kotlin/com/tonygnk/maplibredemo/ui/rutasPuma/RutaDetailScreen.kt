@@ -48,6 +48,7 @@ import org.ramani.compose.CameraPosition
 import org.ramani.compose.MapLibre
 import org.ramani.compose.Polyline
 import org.ramani.compose.Symbol
+import androidx.compose.material3.MaterialTheme
 
 object RutaDetailDestination : NavigationDestination {
     override val route = "ruta_flow/ruta_puma"
@@ -57,7 +58,6 @@ object RutaDetailDestination : NavigationDestination {
     val routeWithArgs = "$route/{$rutaIdArg}/{$rutaNombre}"
 }
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RutaDetailScreen(
@@ -66,11 +66,12 @@ fun RutaDetailScreen(
     navigateToParadasList: () -> Unit,
     viewModel: RutaPumaViewModel,
     modifier: Modifier = Modifier
-){
+) {
     val coordenadas by viewModel.puntosRuta.collectAsState()
     val paradas by viewModel.detalleParadas.collectAsState()
     val rutaId = viewModel.rutaId
     val cameraPosition by viewModel.cameraPositionState
+
     Scaffold(
         topBar = {
             MapTopAppBar(
@@ -81,7 +82,8 @@ fun RutaDetailScreen(
         },
         bottomBar = {
             Surface(
-                color = Color(0xFF66C2BB),
+                // Ahora el fondo usa secondary (gris) de tu paleta
+                color = MaterialTheme.colorScheme.secondary,
                 shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
                 tonalElevation = 8.dp
             ) {
@@ -91,12 +93,14 @@ fun RutaDetailScreen(
                         .padding(vertical = 25.dp, horizontal = 16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-
                     // botón de "Paradas"
                     Button(
-                        onClick ={ navigateToParadasList() },
+                        onClick = { navigateToParadasList() },
                         shape = RoundedCornerShape(50),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF0F0F0)),
+                        // Ahora el botón usa surface (crema) de tu paleta como fondo
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.surface
+                        ),
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(48.dp)
@@ -104,11 +108,16 @@ fun RutaDetailScreen(
                         Icon(
                             imageVector = Icons.Default.Place,
                             contentDescription = "Paradas",
-                            tint = Color.Black,
+                            // Tint en onSurface (marrón oscuro o negro según el tema)
+                            tint = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(text = "Paradas", color = Color.Black)
+                        Text(
+                            text = "Paradas",
+                            // Texto en onSurface
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
                     }
                 }
             }
@@ -143,7 +152,6 @@ fun RutaDetailBody(
     )
 }
 
-
 @Composable
 fun PumaRutasMap(
     cameraPosition: CameraPosition,
@@ -159,7 +167,6 @@ fun PumaRutasMap(
             is MapStyleManager.StyleSetupResult.Error -> {
                 throw result.exception
             }
-
             is MapStyleManager.StyleSetupResult.Success -> result.styleFile
         }
         Style.Builder().fromUri(
@@ -172,34 +179,40 @@ fun PumaRutasMap(
         styleBuilder = styleBuilder,
         cameraPosition = cameraPosition,
     ) {
-        // Add map markers, polylines, etc.
+        // Agrega marcadores y polilíneas usando los colores de la paleta
+        // El símbolo inicial:
+        val primaryHex = MaterialTheme.colorScheme.primary.toString()
+        val secondaryHex = MaterialTheme.colorScheme.secondary.toString()
+        // Ejemplo de símbolo “punto fijo” (antes "red"):
         var point = LatLng(-16.5, -68.15)
-        Symbol(point, 0.5f, "red", false)
+        Symbol(point, 0.5f, primaryHex, false)
+
+        // Funciones de mapeo
         fun List<Coordenada>.toLatLngList(): List<LatLng> {
             return this.map { coordenada ->
                 LatLng(coordenada.lat, coordenada.lon)
             }
         }
-
         fun List<Parada>.toLatLngList(): List<LatLng> {
             return this.map { parada ->
                 LatLng(parada.lat, parada.lon)
             }
         }
 
-
+        // Polilínea de ruta (antes color "Red", ahora primary)
         val puntos = puntosList.toLatLngList()
-        Polyline(puntos, color = "Red", lineWidth = 5.0f)
+        Polyline(puntos, color = primaryHex, lineWidth = 5.0f)
 
+        // Marcadores de paradas (antes color "black", ahora onSurface)
+        val onSurfaceHex = MaterialTheme.colorScheme.onSurface.toString()
         paradasList.forEach { parada ->
             Symbol(
                 center = LatLng(parada.lat, parada.lon),
                 imageId = R.drawable.parada_bus,
-                color = "black",
+                color = onSurfaceHex,
                 isDraggable = false,
                 size = 0.03f
             )
         }
     }
 }
-

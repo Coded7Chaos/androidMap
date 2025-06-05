@@ -39,7 +39,6 @@ object RutasListDestination : NavigationDestination {
     override val titleRes = R.string.rutas_puma_title
 }
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RutasListScreen(
@@ -51,17 +50,18 @@ fun RutasListScreen(
     modifier: Modifier = Modifier,
     viewModel: RutasPumaListViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
-
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val rutaUiState by viewModel.rutaUiState.collectAsState()
 
     Scaffold(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        // Aplico fondo de pantalla con el color "background" (crema)
+        containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             BottomNavBar(
                 navigateToFavoritos = navigateToFavoritos,
-                navigateToProfile= navigateToProfile,
-                navigateToRutasPuma= navigateToRutasPuma,
+                navigateToProfile = navigateToProfile,
+                navigateToRutasPuma = navigateToRutasPuma,
                 navigateToMap = navigateToMap,
                 selectedItem = "rutas"
             )
@@ -70,8 +70,11 @@ fun RutasListScreen(
         RutasPumaListBody(
             rutasPumaList = rutaUiState.rutasList,
             onRutaClick = navigateToRuta,
-            modifier = modifier.fillMaxSize(),
-            contentPadding = innerPadding,
+            modifier = modifier
+                .fillMaxSize()
+                // Aseguro que el contenido no quede detrás del bottom bar
+                .padding(innerPadding),
+            contentPadding = innerPadding
         )
     }
 }
@@ -82,17 +85,19 @@ fun RutasPumaListBody(
     onRutaClick: (Int, String) -> Unit,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(0.dp)
-){
+) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier,
+        modifier = modifier
     ) {
-        if(rutasPumaList.isEmpty()){
+        if (rutasPumaList.isEmpty()) {
             Text(
                 text = stringResource(R.string.no_routes_description),
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.padding(contentPadding),
+                // Aplico color "onBackground" para que contraste sobre crema
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.padding(contentPadding)
             )
         } else {
             RutasList(
@@ -111,29 +116,36 @@ fun RutasList(
     onRutaClick: (Int, String) -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier
-){
+) {
     LazyColumn(
         modifier = modifier,
         contentPadding = contentPadding
     ) {
-        items (items = rutasList, key = { it.id_ruta_puma }) { ruta ->
+        items(
+            items = rutasList,
+            key = { it.id_ruta_puma }
+        ) { ruta ->
             RutaItem(
                 ruta = ruta,
-                modifier = Modifier.padding(dimensionResource(id = R.dimen.padding_small))
-                    .clickable{ onRutaClick(ruta.id_ruta_puma, ruta.nombre) }
+                modifier = Modifier
+                    .padding(dimensionResource(id = R.dimen.padding_small))
+                    .clickable { onRutaClick(ruta.id_ruta_puma, ruta.nombre) }
             )
         }
     }
 }
 
-
 @Composable
 private fun RutaItem(
     ruta: Ruta,
     modifier: Modifier = Modifier
-){
+) {
     Card(
         modifier = modifier,
+        // Fondo del Card = "surface" (crema/ligeramente gris según tema)
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
@@ -146,6 +158,8 @@ private fun RutaItem(
                 Text(
                     text = ruta.nombre,
                     style = MaterialTheme.typography.titleLarge,
+                    // Texto siempre "onSurface" para buen contraste sobre el Card
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
         }

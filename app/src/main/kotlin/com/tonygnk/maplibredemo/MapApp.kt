@@ -24,6 +24,7 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -60,6 +61,7 @@ import org.ramani.compose.Circle
 import org.ramani.compose.MapLibre
 import org.ramani.compose.Polyline
 import org.ramani.compose.Symbol
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 fun MapApp(navController: NavHostController = rememberNavController()){
@@ -80,8 +82,14 @@ fun MapTopAppBar(
         title = { Text(title) },
         modifier = modifier,
         scrollBehavior = scrollBehavior,
+        // Aquí aplicamos tu color primary (marrón) y el texto en onPrimary (blanco)
+        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+            containerColor = MaterialTheme.colorScheme.primary,
+            titleContentColor = MaterialTheme.colorScheme.onPrimary,
+            navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+        ),
         navigationIcon = {
-            if(canNavigateBack) {
+            if (canNavigateBack) {
                 IconButton(onClick = navigateUp) {
                     Icon(
                         imageVector = Filled.ArrowBack,
@@ -103,15 +111,25 @@ fun BottomNavBar(
     selectedItem: String
 ) {
     NavigationBar(
+        // Fondo de la barra en gris claro y contenido en negro para buen contraste
+        containerColor = MaterialTheme.colorScheme.secondary,
+        contentColor = MaterialTheme.colorScheme.onSecondary,
         tonalElevation = 8.dp
-    ){
+    ) {
         NavigationBarItem(
             icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
             label = { Text("Home") },
             selected = selectedItem == "map",
             onClick = {
                 navigateToMap()
-            }
+            },
+            colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
+                selectedIconColor = MaterialTheme.colorScheme.primary,
+                selectedTextColor = MaterialTheme.colorScheme.primary,
+                unselectedIconColor = MaterialTheme.colorScheme.onSecondary,
+                unselectedTextColor = MaterialTheme.colorScheme.onSecondary,
+                indicatorColor = MaterialTheme.colorScheme.background
+            )
         )
         NavigationBarItem(
             icon = { Icon(Icons.Default.Star, contentDescription = "Favoritos") },
@@ -119,7 +137,14 @@ fun BottomNavBar(
             selected = selectedItem == "favoritos",
             onClick = {
                 navigateToFavoritos()
-            }
+            },
+            colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
+                selectedIconColor = MaterialTheme.colorScheme.primary,
+                selectedTextColor = MaterialTheme.colorScheme.primary,
+                unselectedIconColor = MaterialTheme.colorScheme.onSecondary,
+                unselectedTextColor = MaterialTheme.colorScheme.onSecondary,
+                indicatorColor = MaterialTheme.colorScheme.background
+            )
         )
         NavigationBarItem(
             icon = { Icon(Icons.Default.DirectionsBus, contentDescription = "Rutas") },
@@ -127,7 +152,14 @@ fun BottomNavBar(
             selected = selectedItem == "rutas",
             onClick = {
                 navigateToRutasPuma()
-            }
+            },
+            colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
+                selectedIconColor = MaterialTheme.colorScheme.primary,
+                selectedTextColor = MaterialTheme.colorScheme.primary,
+                unselectedIconColor = MaterialTheme.colorScheme.onSecondary,
+                unselectedTextColor = MaterialTheme.colorScheme.onSecondary,
+                indicatorColor = MaterialTheme.colorScheme.background
+            )
         )
         NavigationBarItem(
             icon = { Icon(Icons.Default.Person, contentDescription = "Perfil") },
@@ -135,9 +167,14 @@ fun BottomNavBar(
             selected = selectedItem == "profile",
             onClick = {
                 navigateToProfile()
-            }
+            },
+            colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
+                selectedIconColor = MaterialTheme.colorScheme.primary,
+                selectedTextColor = MaterialTheme.colorScheme.primary,
+                unselectedIconColor = MaterialTheme.colorScheme.onSecondary,
+                unselectedTextColor = MaterialTheme.colorScheme.onSecondary,
+                indicatorColor = MaterialTheme.colorScheme.background
+            )
         )
     }
 }
-
-
