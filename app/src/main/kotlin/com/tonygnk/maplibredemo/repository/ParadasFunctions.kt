@@ -17,6 +17,7 @@ class ParadasFunctions(
     {
         return paradaRepository.getAllParadasStream()
             .map { listaParadas ->
+                listaParadas.filter { it.estado }
                 val filtradas = listaParadas.filter { parada ->
                     distancia(lat, lon, parada.lat, parada.lon) < 600
                 }

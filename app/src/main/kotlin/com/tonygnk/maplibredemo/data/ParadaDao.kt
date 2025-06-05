@@ -22,9 +22,12 @@ interface ParadaDao {
     @Query("SELECT * from paradas WHERE id_parada = :id")
     fun getItem(id: Int): Flow<Parada>
 
-    @Query("SELECT * FROM paradas ORDER BY nombre ASC")
+    @Query("SELECT * FROM paradas WHERE estado=1 ORDER BY nombre ASC ")
     fun getAllItems(): Flow<List<Parada>>
 
     @Query("SELECT * FROM paradas WHERE nombre LIKE '%' || :nombreDeParada || '%'")
     fun busquedaNombresParadas(nombreDeParada: String): Flow<List<Parada>>
+
+    @Query("UPDATE paradas SET estado=:estado WHERE id_parada=:idParada")
+    suspend fun setEstadoParada(idParada: Int, estado: Int)
 }
