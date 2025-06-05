@@ -22,6 +22,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
@@ -33,6 +34,7 @@ import com.tonygnk.maplibredemo.R
 import com.tonygnk.maplibredemo.models.Ruta
 import com.tonygnk.maplibredemo.ui.AppViewModelProvider
 import com.tonygnk.maplibredemo.ui.navigation.NavigationDestination
+import com.tonygnk.maplibredemo.ui.theme.Cream
 
 object RutasListDestination : NavigationDestination {
     override val route = "rutas_puma"
@@ -144,7 +146,7 @@ private fun RutaItem(
         modifier = modifier,
         // Fondo del Card = "surface" (crema/ligeramente gris según tema)
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = Color(0xFFbf915c)
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
