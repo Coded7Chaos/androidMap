@@ -72,10 +72,6 @@ fun RutasListScreen(
         RutasPumaListBody(
             rutasPumaList = rutaUiState.rutasList,
             onRutaClick = navigateToRuta,
-            modifier = modifier
-                .fillMaxSize()
-                // Aseguro que el contenido no quede detrás del bottom bar
-                .padding(innerPadding),
             contentPadding = innerPadding
         )
     }
@@ -85,13 +81,8 @@ fun RutasListScreen(
 fun RutasPumaListBody(
     rutasPumaList: List<Ruta>,
     onRutaClick: (Int, String) -> Unit,
-    modifier: Modifier = Modifier,
-    contentPadding: PaddingValues = PaddingValues(0.dp)
+    contentPadding: PaddingValues
 ) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier
-    ) {
         if (rutasPumaList.isEmpty()) {
             Text(
                 text = stringResource(R.string.no_routes_description),
@@ -106,10 +97,9 @@ fun RutasPumaListBody(
                 rutasList = rutasPumaList,
                 onRutaClick = onRutaClick,
                 contentPadding = contentPadding,
-                modifier = Modifier.padding(horizontal = dimensionResource(id = R.dimen.padding_small))
+                modifier = Modifier.padding(horizontal = dimensionResource(id = R.dimen.padding_small)).fillMaxSize()
             )
         }
-    }
 }
 
 @Composable
