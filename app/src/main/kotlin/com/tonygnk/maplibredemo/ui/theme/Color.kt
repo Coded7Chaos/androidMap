@@ -26,11 +26,11 @@ val md_theme_light_onSurface = Black
 val md_theme_dark_primary = Brown
 val md_theme_dark_onPrimary = Black
 
-val md_theme_dark_secondary = Grey
+val md_theme_dark_secondary = Black
 val md_theme_dark_onSecondary = White
 
-val md_theme_dark_background = Grey
+val md_theme_dark_background = Black
 val md_theme_dark_onBackground = Black
 
-val md_theme_dark_surface = Grey
+val md_theme_dark_surface = Black
 val md_theme_dark_onSurface = White
