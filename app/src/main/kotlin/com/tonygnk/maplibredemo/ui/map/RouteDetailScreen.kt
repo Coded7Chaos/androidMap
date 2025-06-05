@@ -41,6 +41,7 @@ import com.tonygnk.maplibredemo.ui.rutasPuma.PumaRutasMap
 import com.tonygnk.maplibredemo.ui.rutasPuma.RutaDetailDestination.rutaIdArg
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
+import org.ramani.compose.Polyline
 
 object RouteDetailDestination : NavigationDestination {
     override val route    = "route_detail"
@@ -53,20 +54,11 @@ object RouteDetailDestination : NavigationDestination {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RouteDetailScreen(
-    viewModel: RouteSearchViewModel,
-    idInicio: Int,
-    idFin: Int,
+    viewModel: RouteDetailViewModel = viewModel(factory = AppViewModelProvider.Factory),
     navigateBack:() -> Unit,
     ){
 
-    val coordenadasFlow: Flow<List<Coordenada>> = viewModel.repo.getCoordenadasRuta(idInicio, idFin)
-
-    LaunchedEffect(idInicio, idFin) {
-        coordenadasFlow.collect { lista ->
-            // Aquí hacemos el log en el Catlog
-            Log.d("RouteCoordenadas", "Coordenadas de $idInicio..$idFin = $lista")
-        }
-    }
+    val coordenadas by viewModel.puntosRuta.collectAsState()
 
 
     val cameraPositionState = remember {
@@ -78,10 +70,22 @@ fun RouteDetailScreen(
         )
     }
 
+    LaunchedEffect(coordenadas.puntosList) {
+        val lista = coordenadas.puntosList
+        if (lista.isNotEmpty()) {
+            // Tomamos el primer punto para centrar la cámara
+            val first = lista.first()
+            cameraPositionState.value = CameraPosition(
+                target = LatLng(first.lat, first.lon),
+                zoom = 15.0
+            )
+        }
+    }
+
     Scaffold(
         topBar = {
             MapTopAppBar(
-                title = R.string.route_detail_title.toString(),
+                title = "Ruta encontrada",
                 canNavigateBack = true,
                 navigateUp = navigateBack
             )
@@ -89,11 +93,10 @@ fun RouteDetailScreen(
     ) { innerPadding ->
         Mapa(
             cameraPositionState = cameraPositionState,
-            puntosList = listOf(),
+            puntosList = coordenadas.puntosList,
             modifier = Modifier.padding(innerPadding)
         )
     }
-
 }
 
 
@@ -101,7 +104,7 @@ fun RouteDetailScreen(
 @Composable
 fun Mapa(
     cameraPositionState: MutableState<CameraPosition>,
-    puntosList: List<Coordenada>,
+    puntosList: List<Coordenada> = listOf(),
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -121,6 +124,11 @@ fun Mapa(
         )
     }
 
+    fun List<Coordenada>.toLatLngList(): List<LatLng> {
+        return this.map { coordenada ->
+            LatLng(coordenada.lat, coordenada.lon)
+        }
+    }
 
 
     MapLibre(
@@ -128,8 +136,9 @@ fun Mapa(
         styleBuilder = styleBuilder,
         cameraPosition = cameraPositionState.value
     ) {
-
-        }
+        val puntos = puntosList.toLatLngList()
+        Polyline(puntos, color = "Red", lineWidth = 5.0f)
+    }
 
     }
 

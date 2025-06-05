@@ -200,7 +200,6 @@ fun PumaRutasMap(
                 size = 0.03f
             )
         }
-
     }
 }
 

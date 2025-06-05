@@ -67,7 +67,7 @@ object AppViewModelProvider {
         initializer {
             RouteDetailViewModel(
                 mapApplication().container.rutaRepository,
-                createSavedStateHandle()
+                handle = createSavedStateHandle()
             )
         }
 

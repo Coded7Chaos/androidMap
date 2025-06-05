@@ -34,6 +34,7 @@ class RutaPumaViewModel(
                 zoom = 14.0
             )
         )
+
     fun updateCameraPosition(position: CameraPosition){
         cameraPositionState.value = position
     }
@@ -42,6 +43,7 @@ class RutaPumaViewModel(
 
     val rutaId: Int = checkNotNull(savedStateHandle[RutaDetailDestination.rutaIdArg])
     val rutaNombre: String = checkNotNull(savedStateHandle[RutaDetailDestination.rutaNombre])
+
     val puntosRuta: StateFlow<PuntosRuta> = rutaRepository.getRutaPoints(rutaId).map { PuntosRuta(it) }
         .stateIn(
             scope = viewModelScope,
