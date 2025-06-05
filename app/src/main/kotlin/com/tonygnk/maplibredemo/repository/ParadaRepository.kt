@@ -18,4 +18,6 @@ interface ParadaRepository {
     fun searchParadaByNombre(nombreDeParada: String): Flow<List<Parada>>
 
     suspend fun setParadaInactiva(id_parada: Int)
+
+    suspend fun setParadaActiva(id_parada: Int)
 }

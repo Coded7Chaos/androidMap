@@ -22,5 +22,7 @@ class OfflineParadasRepository(private val paradaDao: ParadaDao) : ParadaReposit
     override suspend fun setParadaInactiva(id_parada: Int) = withContext(Dispatchers.IO){
         paradaDao.setEstadoParada(id_parada, 0)
     }
-
+    override suspend fun setParadaActiva(id_parada: Int) =  withContext(Dispatchers.IO){
+        paradaDao.setEstadoParada(id_parada, 1)
+    }
 }

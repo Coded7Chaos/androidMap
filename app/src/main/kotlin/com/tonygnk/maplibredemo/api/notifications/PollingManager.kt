@@ -19,6 +19,8 @@ object PollingManager {
     private val processedIds = ConcurrentHashMap.newKeySet<Int>()
 
     private var pollingJob: Job? = null
+
+
     fun startPolling(
         context: Context,
         paradaRepository: ParadaRepository,
@@ -52,7 +54,17 @@ object PollingManager {
                 }
 
                 if (idsRecibidos.isEmpty()) {
-                    Log.d(TAG, "Respuesta vacía o sin IDs nuevos.")
+                    Log.d(TAG, "Respuesta vacía: No hay notificaciones")
+                    if (processedIds.isNotEmpty()) {
+                        Log.d(TAG, "Hay paradas previamente deshabilitadas: ${processedIds.toList()}. Las reactivaremos.")
+                        processedIds.forEach { idParada ->
+                            paradaRepository.setParadaActiva(idParada)
+                        }
+                        processedIds.clear()
+                        Log.d(TAG, "processedIds limpiado tras reactivar todas.")
+                    } else {
+                        Log.d(TAG, "No hay paradas previamente deshabilitadas. Nada que reactivar.")
+                    }
                 } else {
                     Log.d(TAG, "IDs recibidos: $idsRecibidos")
                     // 3) Filtrar solo los IDs que no estén en processedIds

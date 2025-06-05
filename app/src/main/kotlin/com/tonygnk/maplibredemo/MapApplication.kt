@@ -19,7 +19,7 @@ class MapApplication : Application() {
         container = AppDataContainer(this)
 
         val paradaRepository = container.paradaRepository
-        val notiRepo = NotificationRepository("http://127.0.0.1:3000/axios/paradas")
+        val notiRepo = NotificationRepository("https://run.mocky.io/v3/b38525cb-0685-425e-affe-c0ca72ddc6c8")
 
         PollingManager.startPolling(
             context = applicationContext,
